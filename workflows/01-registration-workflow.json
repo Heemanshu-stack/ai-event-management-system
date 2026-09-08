@@ -1,0 +1,573 @@
+{
+  "name": "Workflow 1 - Registration",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "event-registration",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -528,
+        -336
+      ],
+      "id": "61f6d06d-6e17-4fea-ab04-6496716fe03f",
+      "name": "Webhook",
+      "webhookId": "080a81ae-d215-4490-9840-533c6d5ad047"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "13RfCRYW6INDplK1nRrJMrT_EqqF2apCGgdMXuQDEDYI",
+          "mode": "list",
+          "cachedResultName": "EventPilot AI Database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13RfCRYW6INDplK1nRrJMrT_EqqF2apCGgdMXuQDEDYI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Participants",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13RfCRYW6INDplK1nRrJMrT_EqqF2apCGgdMXuQDEDYI/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ParticipantID": "={{ $json.participantId }}",
+            "Name": "={{ $json.fullName }}",
+            "Email": "={{ $json.email }}",
+            "Phone": "={{ $json.phone }}",
+            "College": "={{ $json.college }}",
+            "Event": "={{ $json.event }}",
+            "Registration Time": "={{ $json.timestamp }}",
+            "Attendance": "Pending",
+            "Certificate Sent": "No"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "ParticipantID",
+              "displayName": "ParticipantID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "College",
+              "displayName": "College",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Event",
+              "displayName": "Event",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Registration Time",
+              "displayName": "Registration Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "QR Code Link",
+              "displayName": "QR Code Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Attendance",
+              "displayName": "Attendance",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Certificate Sent",
+              "displayName": "Certificate Sent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        144,
+        -336
+      ],
+      "id": "c0bbd4cd-7079-47ab-8ba2-17cd7eb1e20a",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "38AIGevkzcdoUwiK",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "13RfCRYW6INDplK1nRrJMrT_EqqF2apCGgdMXuQDEDYI",
+          "mode": "list",
+          "cachedResultName": "EventPilot AI Database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13RfCRYW6INDplK1nRrJMrT_EqqF2apCGgdMXuQDEDYI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 321896411,
+          "mode": "list",
+          "cachedResultName": "Form responses 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13RfCRYW6INDplK1nRrJMrT_EqqF2apCGgdMXuQDEDYI/edit#gid=321896411"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -304,
+        -336
+      ],
+      "id": "749bf348-b36c-4eea-ae2e-8f56bc07738c",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "38AIGevkzcdoUwiK",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const participants = $input.all();\n\nconst nextNumber = participants.length + 1;\n\nconst participantId = `EVT-${String(nextNumber).padStart(6, '0')}`;\n\nconst body = $('Webhook').first().json.body;\n\nreturn [{\n  json: {\n    participantId,\n    timestamp: body.timestamp,\n    fullName: body.fullName,\n    email: body.email,\n    phone: body.phone,\n    college: body.college,\n    event: body.event,\n    consent: body.consent\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -80,
+        -336
+      ],
+      "id": "9011168f-ec76-4068-868b-37b2c83018b7",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={{encodeURIComponent(JSON.stringify({\n  participantId: $json.ParticipantID,\n  name: $json.Name,\n  event: $json.Event\n}))}}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        368,
+        -336
+      ],
+      "id": "9a71dad0-f6ab-4f38-bbec-cb7a6b3d0a7b",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "name": "={{$json.ParticipantID}}.png",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1K9HswWWOJuiO-GiOU8vl4CVAcsVskv2P",
+          "mode": "list",
+          "cachedResultName": "QR Codes",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1K9HswWWOJuiO-GiOU8vl4CVAcsVskv2P"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        592,
+        -336
+      ],
+      "id": "885414d1-40ca-45af-878b-750eef9f41b5",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "n8AZhp4OrivCbK8Z",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "share",
+        "fileId": {
+          "__rl": true,
+          "value": "1b4dtTs9dHbHCo6363xtu27yeR291twxz",
+          "mode": "list",
+          "cachedResultName": "EVT-000003.png",
+          "cachedResultUrl": "https://drive.google.com/file/d/1b4dtTs9dHbHCo6363xtu27yeR291twxz/view?usp=drivesdk"
+        },
+        "permissionsUi": {
+          "permissionsValues": {
+            "role": "reader",
+            "type": "anyone"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        816,
+        -336
+      ],
+      "id": "326e0220-0199-4c05-8589-7e4cc2b1947f",
+      "name": "Share file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "n8AZhp4OrivCbK8Z",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "13RfCRYW6INDplK1nRrJMrT_EqqF2apCGgdMXuQDEDYI",
+          "mode": "list",
+          "cachedResultName": "EventPilot AI Database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13RfCRYW6INDplK1nRrJMrT_EqqF2apCGgdMXuQDEDYI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Participants",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13RfCRYW6INDplK1nRrJMrT_EqqF2apCGgdMXuQDEDYI/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ParticipantID": "={{$node[\"Append row in sheet\"].json[\"ParticipantID\"]}}",
+            "QR Code Link": "={{$node[\"Upload file\"].json[\"webViewLink\"]}}"
+          },
+          "matchingColumns": [
+            "ParticipantID"
+          ],
+          "schema": [
+            {
+              "id": "ParticipantID",
+              "displayName": "ParticipantID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "College",
+              "displayName": "College",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Event",
+              "displayName": "Event",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Registration Time",
+              "displayName": "Registration Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "QR Code Link",
+              "displayName": "QR Code Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Attendance",
+              "displayName": "Attendance",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Certificate Sent",
+              "displayName": "Certificate Sent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1040,
+        -336
+      ],
+      "id": "21570978-d5a7-4ec9-9b82-a7a74a77d561",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "38AIGevkzcdoUwiK",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{$node[\"Append row in sheet\"].json[\"Email\"]}}",
+        "subject": "🎉 Registration Confirmed - EventPilot AI",
+        "message": "=<h2>Registration Confirmed!</h2>  <p>Hello <b>{{$node[\"Append row in sheet\"].json[\"Name\"]}}</b>,</p>  <p>Your registration has been successfully completed.</p>  <ul> <li><b>Participant ID:</b> {{$node[\"Append row in sheet\"].json[\"ParticipantID\"]}}</li> <li><b>Event:</b> {{$node[\"Append row in sheet\"].json[\"Event\"]}}</li> </ul>  <p>Your QR Code:</p>  <p> <a href=\"{{$node[\"Upload file\"].json[\"webViewLink\"]}}\"> Click here to view your QR Code </a> </p>  <p>Please keep this QR code safe. It will be scanned during event check-in.</p>  <p>Thank you,<br> EventPilot AI Team</p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1248,
+        -336
+      ],
+      "id": "d0e7484b-efca-44d4-adfb-ff4031eee6e9",
+      "name": "Send a message",
+      "webhookId": "16ad4192-71b4-461b-9c4c-2c6c6b21953c",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "SGDyfw75U5jGemA2",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload file": {
+      "main": [
+        [
+          {
+            "node": "Share file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Share file": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "93468592-775f-4314-a522-d3c549eb4382",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "37f159001c98304b3432bc43d0df11ee68bedb94fc094afd571f710e4d04bcf3"
+  },
+  "nodeGroups": [],
+  "id": "4YwBLIjEUEu6DSDW",
+  "tags": []
+}

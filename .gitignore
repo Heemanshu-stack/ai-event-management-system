@@ -1,0 +1,33 @@
+# OS Metadata
+.DS_Store
+Thumbs.db
+
+# Node.js / Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment & API Keys
+.env
+.env.local
+*.env
+
+# IDE / Editor Settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Next.js Build Output & Cache
+.next/
+website/.next/
+website/node_modules/
+.vercel/
+website/.vercel/
+
+# Temporary Files & Logs
+*.log
+tmp/
+dist/
+scratch/

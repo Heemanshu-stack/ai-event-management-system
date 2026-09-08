@@ -1,0 +1,1797 @@
+{
+  "name": "EventPilot AI - Master Unified Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 🚀 1. Registration & QR Pass Engine\n**Path:** `POST /event-registration`\n- **Flow:** Receives student registration ➔ Calculates next sequential `ParticipantID` & auto-generates `TeamID` ➔ Saves to Google Sheets ➔ Calls QR server API to generate dynamic QR ➔ Uploads QR image to Google Drive & sets public reader permission ➔ Updates row with Drive webViewLink ➔ Dispatches personalized confirmation email with QR pass link via Gmail.",
+        "height": 380,
+        "width": 2150,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -620,
+        -520
+      ],
+      "id": "sticky-w1-registration",
+      "name": "Sticky Note: Registration"
+    },
+    {
+      "parameters": {
+        "content": "## 📱 2. QR Attendance Check-In Pipeline\n**Path:** `POST /attendance-checkin`\n- **Flow:** Staff portal scanner reads attendee QR badge ➔ Queries Google Sheets by `ParticipantID` ➔ Verifies if status is 'Pending' ➔ If valid, updates status to `Present` with check-in timestamp ➔ Returns instant JSON status to Staff UI (or flags duplicate check-ins).",
+        "height": 360,
+        "width": 1400,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -100,
+        -120
+      ],
+      "id": "sticky-w2-attendance",
+      "name": "Sticky Note: Attendance"
+    },
+    {
+      "parameters": {
+        "content": "## 🎓 3. Dynamic Certificate Generation & Dispatch\n**Path:** `POST /send-certificates` / Manual Execution\n- **Flow:** Queries Google Sheets for all attendees marked `Present` ➔ Iterates through attendee batch ➔ Duplicates master Google Slides Certificate template ➔ Injects Participant Name, Event Name, and Date ➔ Converts & downloads as crisp PDF ➔ Emails PDF certificate to attendee along with Feedback Form link ➔ Updates Sheet with `Certificate Sent = yes`.",
+        "height": 380,
+        "width": 2150,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -100,
+        330
+      ],
+      "id": "sticky-w3-certificates",
+      "name": "Sticky Note: Certificates"
+    },
+    {
+      "parameters": {
+        "content": "## 🤖 4. AI Feedback Intelligence & Executive Insights\n**Path:** `POST /event-feedback`\n- **Flow:** Collects post-event feedback into Feedback Sheet ➔ Aggregates all participant feedback & ratings ➔ Feeds full survey dataset to **Groq Llama 3.1 8B LLM** ➔ Generates an executive HTML report with Sentiment score, Key Highlights, Areas for Improvement & Strategic Action Items ➔ Dispatches beautiful HTML report email to organizer (`heemanshu20077@gmail.com`).",
+        "height": 480,
+        "width": 1550,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -100,
+        780
+      ],
+      "id": "sticky-w4-feedback",
+      "name": "Sticky Note: AI Feedback"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "event-registration",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -528,
+        -736
+      ],
+      "id": "w1-reg-node-1",
+      "name": "W1-Reg: Webhook",
+      "webhookId": "080a81ae-d215-4490-9840-533c6d5ad047"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "13RfCRYW6INDplK1nRrJMrT_EqqF2apCGgdMXuQDEDYI",
+          "mode": "list",
+          "cachedResultName": "EventPilot AI Database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13RfCRYW6INDplK1nRrJMrT_EqqF2apCGgdMXuQDEDYI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Participants",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13RfCRYW6INDplK1nRrJMrT_EqqF2apCGgdMXuQDEDYI/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ParticipantID": "={{ $json.participantId }}",
+            "Name": "={{ $json.fullName }}",
+            "Email": "={{ $json.email }}",
+            "Phone": "={{ $json.phone }}",
+            "College": "={{ $json.college }}",
+            "Event": "={{ $json.event }}",
+            "Registration Time": "={{ $json.timestamp }}",
+            "Attendance": "Pending",
+            "Certificate Sent": "No",
+            "TeamID": "={{ $json.teamId }}",
+            "EventID": "={{ $json.eventId }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "ParticipantID",
+              "displayName": "ParticipantID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "College",
+              "displayName": "College",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Event",
+              "displayName": "Event",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Registration Time",
+              "displayName": "Registration Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "QR Code Link",
+              "displayName": "QR Code Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Attendance",
+              "displayName": "Attendance",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Certificate Sent",
+              "displayName": "Certificate Sent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        144,
+        -736
+      ],
+      "id": "w1-reg-node-2",
+      "name": "W1-Reg: Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "38AIGevkzcdoUwiK",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "13RfCRYW6INDplK1nRrJMrT_EqqF2apCGgdMXuQDEDYI",
+          "mode": "list",
+          "cachedResultName": "EventPilot AI Database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13RfCRYW6INDplK1nRrJMrT_EqqF2apCGgdMXuQDEDYI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 321896411,
+          "mode": "list",
+          "cachedResultName": "Form responses 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13RfCRYW6INDplK1nRrJMrT_EqqF2apCGgdMXuQDEDYI/edit#gid=321896411"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -304,
+        -736
+      ],
+      "id": "w1-reg-node-3",
+      "name": "W1-Reg: Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "38AIGevkzcdoUwiK",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const participants = $input.all();\nconst nextNumber = participants.length + 1;\nconst participantId = `EVT-${String(nextNumber).padStart(6, '0')}`;\nconst teamId = `TEAM-${String(1000 + nextNumber)}`;\n\nconst body = $('W1-Reg: Webhook').first().json.body || {};\n\nreturn [{\n  json: {\n    participantId,\n    teamId: body.teamId || teamId,\n    eventId: body.eventId || 'EVT-H-001',\n    timestamp: body.timestamp || new Date().toISOString(),\n    fullName: body.fullName || body.name || 'Participant',\n    email: body.email || '',\n    phone: body.phone || '',\n    college: body.college || '',\n    event: body.event || 'AI Innovation Hackathon',\n    consent: body.consent || true\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -80,
+        -736
+      ],
+      "id": "w1-reg-node-4",
+      "name": "W1-Reg: Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={{encodeURIComponent(JSON.stringify({\n  participantId: $json.ParticipantID,\n  name: $json.Name,\n  event: $json.Event\n}))}}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        368,
+        -736
+      ],
+      "id": "w1-reg-node-5",
+      "name": "W1-Reg: HTTP Request"
+    },
+    {
+      "parameters": {
+        "name": "={{$json.ParticipantID}}.png",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1K9HswWWOJuiO-GiOU8vl4CVAcsVskv2P",
+          "mode": "list",
+          "cachedResultName": "QR Codes",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1K9HswWWOJuiO-GiOU8vl4CVAcsVskv2P"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        592,
+        -736
+      ],
+      "id": "w1-reg-node-6",
+      "name": "W1-Reg: Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "n8AZhp4OrivCbK8Z",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "share",
+        "fileId": {
+          "__rl": true,
+          "value": "1b4dtTs9dHbHCo6363xtu27yeR291twxz",
+          "mode": "list",
+          "cachedResultName": "EVT-000003.png",
+          "cachedResultUrl": "https://drive.google.com/file/d/1b4dtTs9dHbHCo6363xtu27yeR291twxz/view?usp=drivesdk"
+        },
+        "permissionsUi": {
+          "permissionsValues": {
+            "role": "reader",
+            "type": "anyone"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        816,
+        -736
+      ],
+      "id": "w1-reg-node-7",
+      "name": "W1-Reg: Share file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "n8AZhp4OrivCbK8Z",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "13RfCRYW6INDplK1nRrJMrT_EqqF2apCGgdMXuQDEDYI",
+          "mode": "list",
+          "cachedResultName": "EventPilot AI Database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13RfCRYW6INDplK1nRrJMrT_EqqF2apCGgdMXuQDEDYI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Participants",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13RfCRYW6INDplK1nRrJMrT_EqqF2apCGgdMXuQDEDYI/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ParticipantID": "={{$('W1-Reg: Append row in sheet').json[\"ParticipantID\"]}}",
+            "QR Code Link": "={{$('W1-Reg: Upload file').json[\"webViewLink\"]}}"
+          },
+          "matchingColumns": [
+            "ParticipantID"
+          ],
+          "schema": [
+            {
+              "id": "ParticipantID",
+              "displayName": "ParticipantID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "College",
+              "displayName": "College",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Event",
+              "displayName": "Event",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Registration Time",
+              "displayName": "Registration Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "QR Code Link",
+              "displayName": "QR Code Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Attendance",
+              "displayName": "Attendance",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Certificate Sent",
+              "displayName": "Certificate Sent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1040,
+        -736
+      ],
+      "id": "w1-reg-node-8",
+      "name": "W1-Reg: Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "38AIGevkzcdoUwiK",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{$('W1-Reg: Append row in sheet').json[\"Email\"]}}",
+        "subject": "🎉 Registration Confirmed - EventPilot AI",
+        "message": "=<h2>Registration Confirmed!</h2>  <p>Hello <b>{{$('W1-Reg: Append row in sheet').json[\"Name\"]}}</b>,</p>  <p>Your registration has been successfully completed.</p>  <ul> <li><b>Participant ID:</b> {{$('W1-Reg: Append row in sheet').json[\"ParticipantID\"]}}</li> <li><b>Event:</b> {{$('W1-Reg: Append row in sheet').json[\"Event\"]}}</li> </ul>  <p>Your QR Code:</p>  <p> <a href=\"{{$('W1-Reg: Upload file').json[\"webViewLink\"]}}\"> Click here to view your QR Code </a> </p>  <p>Please keep this QR code safe. It will be scanned during event check-in.</p>  <p>Thank you,<br> EventPilot AI Team</p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1248,
+        -736
+      ],
+      "id": "w1-reg-node-9",
+      "name": "W1-Reg: Send a message",
+      "webhookId": "16ad4192-71b4-461b-9c4c-2c6c6b21953c",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "SGDyfw75U5jGemA2",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "attendance-checkin",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "w2-att-node-1",
+      "name": "W2-Att: Webhook",
+      "webhookId": "fafeafce-051d-4eb8-9853-e20fef1d283c"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body;\n\nreturn [\n  {\n    json: {\n      participantId: body.participantId,\n      name: body.name,\n      event: body.event,\n      checkInTime: new Date().toISOString()\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "w2-att-node-2",
+      "name": "W2-Att: Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "13RfCRYW6INDplK1nRrJMrT_EqqF2apCGgdMXuQDEDYI",
+          "mode": "list",
+          "cachedResultName": "EventPilot AI Database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13RfCRYW6INDplK1nRrJMrT_EqqF2apCGgdMXuQDEDYI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Participants",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13RfCRYW6INDplK1nRrJMrT_EqqF2apCGgdMXuQDEDYI/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "ParticipantID",
+              "lookupValue": "={{$json.participantId}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        416,
+        0
+      ],
+      "id": "w2-att-node-3",
+      "name": "W2-Att: Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "38AIGevkzcdoUwiK",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f2c54a58-ab4a-421e-a913-a3a22247cc0e",
+              "leftValue": "={{$json.Attendance}}",
+              "rightValue": "Pending",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        624,
+        0
+      ],
+      "id": "w2-att-node-4",
+      "name": "W2-Att: If"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "13RfCRYW6INDplK1nRrJMrT_EqqF2apCGgdMXuQDEDYI",
+          "mode": "list",
+          "cachedResultName": "EventPilot AI Database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13RfCRYW6INDplK1nRrJMrT_EqqF2apCGgdMXuQDEDYI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Participants",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13RfCRYW6INDplK1nRrJMrT_EqqF2apCGgdMXuQDEDYI/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ParticipantID": "={{$('W2-Att: Get row(s) in sheet').json[\"ParticipantID\"]}}",
+            "Attendance": "Present",
+            "Check-In Time": "={{$now}}"
+          },
+          "matchingColumns": [
+            "ParticipantID"
+          ],
+          "schema": [
+            {
+              "id": "ParticipantID",
+              "displayName": "ParticipantID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "College",
+              "displayName": "College",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Event",
+              "displayName": "Event",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Registration Time",
+              "displayName": "Registration Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "QR Code Link",
+              "displayName": "QR Code Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Attendance",
+              "displayName": "Attendance",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Certificate Sent",
+              "displayName": "Certificate Sent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Check-In Time",
+              "displayName": "Check-In Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        832,
+        -96
+      ],
+      "id": "w2-att-node-5",
+      "name": "W2-Att: Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "38AIGevkzcdoUwiK",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": true,\n  \"message\": \"Check-in successful!\",\n  \"status\": \"Present\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1040,
+        -96
+      ],
+      "id": "w2-att-node-6",
+      "name": "W2-Att: Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": false,\n  \"message\": \"Participant has already checked in.\",\n  \"status\": \"Already Present\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        832,
+        96
+      ],
+      "id": "w2-att-node-7",
+      "name": "W2-Att: Respond to Webhook1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        482
+      ],
+      "id": "w3-cert-node-1",
+      "name": "W3-Cert: When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "13RfCRYW6INDplK1nRrJMrT_EqqF2apCGgdMXuQDEDYI",
+          "mode": "list",
+          "cachedResultName": "EventPilot AI Database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13RfCRYW6INDplK1nRrJMrT_EqqF2apCGgdMXuQDEDYI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Participants",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13RfCRYW6INDplK1nRrJMrT_EqqF2apCGgdMXuQDEDYI/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Attendance",
+              "lookupValue": "Present"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        482
+      ],
+      "id": "w3-cert-node-2",
+      "name": "W3-Cert: Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "38AIGevkzcdoUwiK",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "copy",
+        "fileId": {
+          "__rl": true,
+          "value": "1crSdtMGje7F_XMpvX_QwiZg9o-kUMSISalnmBnlh7y4",
+          "mode": "list",
+          "cachedResultName": "Certificate of Participation – AI Innovation Hackathon Certificate",
+          "cachedResultUrl": "https://docs.google.com/presentation/d/1crSdtMGje7F_XMpvX_QwiZg9o-kUMSISalnmBnlh7y4/edit?usp=drivesdk"
+        },
+        "name": "=Certificate - {{$json.Name}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        672,
+        530
+      ],
+      "id": "w3-cert-node-3",
+      "name": "W3-Cert: Copy file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "n8AZhp4OrivCbK8Z",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        896,
+        450
+      ],
+      "id": "w3-cert-node-4",
+      "name": "W3-Cert: Merge"
+    },
+    {
+      "parameters": {
+        "operation": "replaceText",
+        "presentationId": "={{$json.id}}",
+        "textUi": {
+          "textValues": [
+            {
+              "text": "PARTICIPANT_NAME",
+              "replaceText": "={{$json.Name}}"
+            },
+            {
+              "text": "EVENT_NAME",
+              "replaceText": "={{$json.Event}}"
+            },
+            {
+              "text": "EVENT_DATE",
+              "replaceText": "={{new Date().toLocaleDateString(\"en-IN\")}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSlides",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        450
+      ],
+      "id": "w3-cert-node-5",
+      "name": "W3-Cert: Replace text in a presentation",
+      "credentials": {
+        "googleSlidesOAuth2Api": {
+          "id": "6X74DlgS1TKhHI4D",
+          "name": "Google Slides account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{$json.presentationId}}",
+          "mode": "id"
+        },
+        "options": {
+          "googleFileConversion": {
+            "conversion": {
+              "slidesToFormat": "application/pdf"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1344,
+        450
+      ],
+      "id": "w3-cert-node-6",
+      "name": "W3-Cert: Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "n8AZhp4OrivCbK8Z",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{$('W3-Cert: Merge').json[\"Email\"]}}",
+        "subject": "=🎉 Your Certificate of Participation - {{$('W3-Cert: Merge').json[\"Event\"]}}",
+        "message": "=<h2>Congratulations {{$('W3-Cert: Merge').json[\"Name\"]}}! 🎉</h2>\n\nPLEASE fill this form : - https://docs.google.com/forms/d/e/1FAIpQLSfcZ31VeBAKGRJhm5votrA6a0xyBO3AqMNVl1rLoD7vV5OtGg/viewform?usp=header\n\n\n<p>Thank you for participating in <b>{{$('W3-Cert: Merge').json[\"Event\"]}}</b>.</p>\n\n<p>Please find your certificate attached.</p>\n\n<p>We hope to see you again in our future events.</p>\n\n<br>\n\nRegards,<br>\n<b>EventPilot AI Team</b>",
+        "options": {
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {}
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1568,
+        450
+      ],
+      "id": "w3-cert-node-7",
+      "name": "W3-Cert: Send a message",
+      "webhookId": "a28eb256-a86c-4308-adba-4780711155e7",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "SGDyfw75U5jGemA2",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "13RfCRYW6INDplK1nRrJMrT_EqqF2apCGgdMXuQDEDYI",
+          "mode": "list",
+          "cachedResultName": "EventPilot AI Database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13RfCRYW6INDplK1nRrJMrT_EqqF2apCGgdMXuQDEDYI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Participants",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13RfCRYW6INDplK1nRrJMrT_EqqF2apCGgdMXuQDEDYI/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Certificate Sent": "yes",
+            "ParticipantID": "={{$('W3-Cert: Merge').json[\"ParticipantID\"]}}"
+          },
+          "matchingColumns": [
+            "ParticipantID"
+          ],
+          "schema": [
+            {
+              "id": "ParticipantID",
+              "displayName": "ParticipantID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "College",
+              "displayName": "College",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Event",
+              "displayName": "Event",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Registration Time",
+              "displayName": "Registration Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "QR Code Link",
+              "displayName": "QR Code Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Attendance",
+              "displayName": "Attendance",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Certificate Sent",
+              "displayName": "Certificate Sent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Check-In Time",
+              "displayName": "Check-In Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1792,
+        450
+      ],
+      "id": "w3-cert-node-8",
+      "name": "W3-Cert: Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "38AIGevkzcdoUwiK",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        448,
+        482
+      ],
+      "id": "w3-cert-node-9",
+      "name": "W3-Cert: Loop Over Items"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "event-feedback",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        900
+      ],
+      "id": "w4-ai-node-1",
+      "name": "W4-AI: Webhook",
+      "webhookId": "e22e926e-bd58-41aa-bf4c-d1d41f94251e"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1rFIh6BfdhjgXMCgCHiu7zWPkedSiFAtLIR3o3halXds",
+          "mode": "list",
+          "cachedResultName": "EventPilot AI Feedback",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rFIh6BfdhjgXMCgCHiu7zWPkedSiFAtLIR3o3halXds/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1208447048,
+          "mode": "list",
+          "cachedResultName": "Form responses 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rFIh6BfdhjgXMCgCHiu7zWPkedSiFAtLIR3o3halXds/edit#gid=1208447048"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{$json.body.timestamp}}",
+            "Participant ID ": "={{$json.body.participantId}}",
+            "  Full Name  ": "={{$json.body.fullName}}",
+            "  Email Address  ": "={{$json.body.email}}",
+            "  Event Name  ": "={{$json.body.event}}",
+            "  Overall Rating  ": "={{$json.body.rating}}",
+            "  What did you like the most about the event?  ": "={{$json.body.liked}}",
+            "  What can we improve?  ": "={{$json.body.improve}}",
+            "  Would you attend another event organized by us?  ": "={{$json.body.attendAgain}}",
+            "  Would you recommend this event to your friends?  ": "={{$json.body.recommend}}",
+            "  Any additional comments or suggestions?  ": "={{$json.body.comments}}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Participant ID ",
+              "displayName": "Participant ID ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "  Full Name  ",
+              "displayName": "  Full Name  ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "  Email Address  ",
+              "displayName": "  Email Address  ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "  Event Name  ",
+              "displayName": "  Event Name  ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "  Overall Rating  ",
+              "displayName": "  Overall Rating  ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "  What did you like the most about the event?  ",
+              "displayName": "  What did you like the most about the event?  ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "  What can we improve?  ",
+              "displayName": "  What can we improve?  ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "  Would you attend another event organized by us?  ",
+              "displayName": "  Would you attend another event organized by us?  ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "  Would you recommend this event to your friends?  ",
+              "displayName": "  Would you recommend this event to your friends?  ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "  Any additional comments or suggestions?  ",
+              "displayName": "  Any additional comments or suggestions?  ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        900
+      ],
+      "id": "w4-ai-node-2",
+      "name": "W4-AI: Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "38AIGevkzcdoUwiK",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1rFIh6BfdhjgXMCgCHiu7zWPkedSiFAtLIR3o3halXds",
+          "mode": "list",
+          "cachedResultName": "EventPilot AI Feedback",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rFIh6BfdhjgXMCgCHiu7zWPkedSiFAtLIR3o3halXds/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1208447048,
+          "mode": "list",
+          "cachedResultName": "Form responses 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rFIh6BfdhjgXMCgCHiu7zWPkedSiFAtLIR3o3halXds/edit#gid=1208447048"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        448,
+        900
+      ],
+      "id": "w4-ai-node-3",
+      "name": "W4-AI: Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "38AIGevkzcdoUwiK",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all();\n\nlet feedback = \"\";\n\nfor (const row of rows) {\n\nfeedback += `\nParticipant: ${row.json[\"  Full Name  \"]}\nParticipant ID: ${row.json[\"Participant ID \"]}\nEmail: ${row.json[\"  Email Address  \"]}\nEvent: ${row.json[\"  Event Name  \"]}\nOverall Rating: ${row.json[\"  Overall Rating  \"]}/5\n\nWhat did they like?\n${row.json[\"  What did you like the most about the event?  \"]}\n\nWhat can we improve?\n${row.json[\"  What can we improve?  \"]}\n\nWould attend another event?\n${row.json[\"  Would you attend another event organized by us?  \"]}\n\nWould recommend the event?\n${row.json[\"  Would you recommend this event to your friends?  \"]}\n\nAdditional Comments:\n${row.json[\"  Any additional comments or suggestions?  \"]}\n\n----------------------------------------------------------\n\n`;\n\n}\n\nreturn [\n  {\n    json: {\n      feedback\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        900
+      ],
+      "id": "w4-ai-node-4",
+      "name": "W4-AI: Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert event analyst.\n\nAnalyze the following event feedback.\n\n{{$json.feedback}}\n\nGenerate the report in VALID HTML ONLY.\n\nRules:\n- Return only HTML.\n- Do not use Markdown (#, ##, **, -, etc.).\n- Use <h1>, <h2>, <p>, <ul>, <li>, <strong>, and <hr>.\n- Make the report clean and professional.\n\nStructure:\n\n<h1>📊 Event Feedback Analysis</h1>\n\n<h2>Overall Rating</h2>\n\n<h2>Overall Sentiment</h2>\n\n<h2>Positive Highlights</h2>\n<ul>\n<li>...</li>\n</ul>\n\n<h2>Improvement Areas</h2>\n\n<h2>Participant Summary</h2>\n\n<h2>Recommendations</h2>\n\nEnd the response with only the HTML document.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        880,
+        900
+      ],
+      "id": "w4-ai-node-5",
+      "name": "W4-AI: AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.1-8b-instant",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        752,
+        1108
+      ],
+      "id": "w4-ai-node-6",
+      "name": "W4-AI: Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "ScC9q1SMifHC8ynN",
+          "name": "Groq account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "heemanshu20077@gmail.com",
+        "subject": "📊 AI Event Feedback Analysis Report",
+        "message": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1232,
+        900
+      ],
+      "id": "w4-ai-node-7",
+      "name": "W4-AI: Send a message",
+      "webhookId": "49121541-53c5-4c3a-83ff-1924c019f2c8",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "SGDyfw75U5jGemA2",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "W1-Reg: Webhook": {
+      "main": [
+        [
+          {
+            "node": "W1-Reg: Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "W1-Reg: Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "W1-Reg: Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "W1-Reg: Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "W1-Reg: Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "W1-Reg: Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "W1-Reg: HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "W1-Reg: HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "W1-Reg: Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "W1-Reg: Upload file": {
+      "main": [
+        [
+          {
+            "node": "W1-Reg: Share file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "W1-Reg: Share file": {
+      "main": [
+        [
+          {
+            "node": "W1-Reg: Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "W1-Reg: Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "W1-Reg: Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "W2-Att: Webhook": {
+      "main": [
+        [
+          {
+            "node": "W2-Att: Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "W2-Att: Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "W2-Att: Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "W2-Att: Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "W2-Att: If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "W2-Att: If": {
+      "main": [
+        [
+          {
+            "node": "W2-Att: Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "W2-Att: Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "W2-Att: Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "W2-Att: Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "W3-Cert: When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "W3-Cert: Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "W3-Cert: Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "W3-Cert: Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "W3-Cert: Copy file": {
+      "main": [
+        [
+          {
+            "node": "W3-Cert: Merge",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "W3-Cert: Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "W3-Cert: Merge": {
+      "main": [
+        [
+          {
+            "node": "W3-Cert: Replace text in a presentation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "W3-Cert: Replace text in a presentation": {
+      "main": [
+        [
+          {
+            "node": "W3-Cert: Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "W3-Cert: Download file": {
+      "main": [
+        [
+          {
+            "node": "W3-Cert: Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "W3-Cert: Send a message": {
+      "main": [
+        [
+          {
+            "node": "W3-Cert: Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "W3-Cert: Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "W3-Cert: Merge",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "W3-Cert: Merge",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "W3-Cert: Copy file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "W4-AI: Webhook": {
+      "main": [
+        [
+          {
+            "node": "W4-AI: Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "W4-AI: Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "W4-AI: Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "W4-AI: Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "W4-AI: Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "W4-AI: Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "W4-AI: AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "W4-AI: Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "W4-AI: AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "W4-AI: AI Agent": {
+      "main": [
+        [
+          {
+            "node": "W4-AI: Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "tags": []
+}

@@ -1,0 +1,362 @@
+{
+  "name": "AI Feedback Analysis",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "event-feedback",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "c548544b-3cee-4ad2-81ca-114254049a45",
+      "name": "Webhook",
+      "webhookId": "e22e926e-bd58-41aa-bf4c-d1d41f94251e"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1rFIh6BfdhjgXMCgCHiu7zWPkedSiFAtLIR3o3halXds",
+          "mode": "list",
+          "cachedResultName": "EventPilot AI Feedback",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rFIh6BfdhjgXMCgCHiu7zWPkedSiFAtLIR3o3halXds/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1208447048,
+          "mode": "list",
+          "cachedResultName": "Form responses 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rFIh6BfdhjgXMCgCHiu7zWPkedSiFAtLIR3o3halXds/edit#gid=1208447048"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{$json.body.timestamp}}",
+            "Participant ID ": "={{$json.body.participantId}}",
+            "  Full Name  ": "={{$json.body.fullName}}",
+            "  Email Address  ": "={{$json.body.email}}",
+            "  Event Name  ": "={{$json.body.event}}",
+            "  Overall Rating  ": "={{$json.body.rating}}",
+            "  What did you like the most about the event?  ": "={{$json.body.liked}}",
+            "  What can we improve?  ": "={{$json.body.improve}}",
+            "  Would you attend another event organized by us?  ": "={{$json.body.attendAgain}}",
+            "  Would you recommend this event to your friends?  ": "={{$json.body.recommend}}",
+            "  Any additional comments or suggestions?  ": "={{$json.body.comments}}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Participant ID ",
+              "displayName": "Participant ID ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "  Full Name  ",
+              "displayName": "  Full Name  ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "  Email Address  ",
+              "displayName": "  Email Address  ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "  Event Name  ",
+              "displayName": "  Event Name  ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "  Overall Rating  ",
+              "displayName": "  Overall Rating  ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "  What did you like the most about the event?  ",
+              "displayName": "  What did you like the most about the event?  ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "  What can we improve?  ",
+              "displayName": "  What can we improve?  ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "  Would you attend another event organized by us?  ",
+              "displayName": "  Would you attend another event organized by us?  ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "  Would you recommend this event to your friends?  ",
+              "displayName": "  Would you recommend this event to your friends?  ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "  Any additional comments or suggestions?  ",
+              "displayName": "  Any additional comments or suggestions?  ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        0
+      ],
+      "id": "dc5b8561-312d-471c-8ea3-c36cc25c4634",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "38AIGevkzcdoUwiK",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1rFIh6BfdhjgXMCgCHiu7zWPkedSiFAtLIR3o3halXds",
+          "mode": "list",
+          "cachedResultName": "EventPilot AI Feedback",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rFIh6BfdhjgXMCgCHiu7zWPkedSiFAtLIR3o3halXds/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1208447048,
+          "mode": "list",
+          "cachedResultName": "Form responses 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rFIh6BfdhjgXMCgCHiu7zWPkedSiFAtLIR3o3halXds/edit#gid=1208447048"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        448,
+        0
+      ],
+      "id": "009d896e-f2b6-439a-b390-a963b49b15bb",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "38AIGevkzcdoUwiK",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all();\n\nlet feedback = \"\";\n\nfor (const row of rows) {\n\nfeedback += `\nParticipant: ${row.json[\"  Full Name  \"]}\nParticipant ID: ${row.json[\"Participant ID \"]}\nEmail: ${row.json[\"  Email Address  \"]}\nEvent: ${row.json[\"  Event Name  \"]}\nOverall Rating: ${row.json[\"  Overall Rating  \"]}/5\n\nWhat did they like?\n${row.json[\"  What did you like the most about the event?  \"]}\n\nWhat can we improve?\n${row.json[\"  What can we improve?  \"]}\n\nWould attend another event?\n${row.json[\"  Would you attend another event organized by us?  \"]}\n\nWould recommend the event?\n${row.json[\"  Would you recommend this event to your friends?  \"]}\n\nAdditional Comments:\n${row.json[\"  Any additional comments or suggestions?  \"]}\n\n----------------------------------------------------------\n\n`;\n\n}\n\nreturn [\n  {\n    json: {\n      feedback\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        0
+      ],
+      "id": "5fb76a2a-d39c-485f-b6f7-89a9c3ad65d2",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert event analyst.\n\nAnalyze the following event feedback.\n\n{{$json.feedback}}\n\nGenerate the report in VALID HTML ONLY.\n\nRules:\n- Return only HTML.\n- Do not use Markdown (#, ##, **, -, etc.).\n- Use <h1>, <h2>, <p>, <ul>, <li>, <strong>, and <hr>.\n- Make the report clean and professional.\n\nStructure:\n\n<h1>📊 Event Feedback Analysis</h1>\n\n<h2>Overall Rating</h2>\n\n<h2>Overall Sentiment</h2>\n\n<h2>Positive Highlights</h2>\n<ul>\n<li>...</li>\n</ul>\n\n<h2>Improvement Areas</h2>\n\n<h2>Participant Summary</h2>\n\n<h2>Recommendations</h2>\n\nEnd the response with only the HTML document.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        880,
+        0
+      ],
+      "id": "f7aabac1-0287-4063-b855-745f1c177700",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.1-8b-instant",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        752,
+        208
+      ],
+      "id": "0bd17457-2bd1-474c-b30c-5e7e2f3f83ee",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "ScC9q1SMifHC8ynN",
+          "name": "Groq account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "heemanshu20077@gmail.com",
+        "subject": "📊 AI Event Feedback Analysis Report",
+        "message": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1232,
+        0
+      ],
+      "id": "f6abdfb5-6faa-457d-8230-71563e01e0f7",
+      "name": "Send a message",
+      "webhookId": "49121541-53c5-4c3a-83ff-1924c019f2c8",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "SGDyfw75U5jGemA2",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "df4d02a3-1985-4d1d-a813-e2d7a8e89523",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "37f159001c98304b3432bc43d0df11ee68bedb94fc094afd571f710e4d04bcf3"
+  },
+  "nodeGroups": [],
+  "id": "B2OB9ITaB4zSRKvx",
+  "tags": []
+}

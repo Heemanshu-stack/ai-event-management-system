@@ -1,0 +1,491 @@
+{
+  "name": "My workflow 3 certificate",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        32
+      ],
+      "id": "57534471-4326-450f-938d-6addf268d849",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "13RfCRYW6INDplK1nRrJMrT_EqqF2apCGgdMXuQDEDYI",
+          "mode": "list",
+          "cachedResultName": "EventPilot AI Database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13RfCRYW6INDplK1nRrJMrT_EqqF2apCGgdMXuQDEDYI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Participants",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13RfCRYW6INDplK1nRrJMrT_EqqF2apCGgdMXuQDEDYI/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Attendance",
+              "lookupValue": "Present"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        32
+      ],
+      "id": "e0110bf5-9a15-42a6-be13-0cc61f732640",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "38AIGevkzcdoUwiK",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "copy",
+        "fileId": {
+          "__rl": true,
+          "value": "1crSdtMGje7F_XMpvX_QwiZg9o-kUMSISalnmBnlh7y4",
+          "mode": "list",
+          "cachedResultName": "Certificate of Participation – AI Innovation Hackathon Certificate",
+          "cachedResultUrl": "https://docs.google.com/presentation/d/1crSdtMGje7F_XMpvX_QwiZg9o-kUMSISalnmBnlh7y4/edit?usp=drivesdk"
+        },
+        "name": "=Certificate - {{$json.Name}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        672,
+        80
+      ],
+      "id": "8cc16bce-9098-4519-b656-f084cf51721d",
+      "name": "Copy file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "n8AZhp4OrivCbK8Z",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        896,
+        0
+      ],
+      "id": "e2f734ff-0eac-4eab-907e-dba91e5e1755",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "operation": "replaceText",
+        "presentationId": "={{$json.id}}",
+        "textUi": {
+          "textValues": [
+            {
+              "text": "PARTICIPANT_NAME",
+              "replaceText": "={{$json.Name}}"
+            },
+            {
+              "text": "EVENT_NAME",
+              "replaceText": "={{$json.Event}}"
+            },
+            {
+              "text": "EVENT_DATE",
+              "replaceText": "={{new Date().toLocaleDateString(\"en-IN\")}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSlides",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        0
+      ],
+      "id": "deea9a69-562b-4735-a3a4-a4facea1675b",
+      "name": "Replace text in a presentation",
+      "credentials": {
+        "googleSlidesOAuth2Api": {
+          "id": "6X74DlgS1TKhHI4D",
+          "name": "Google Slides account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{$json.presentationId}}",
+          "mode": "id"
+        },
+        "options": {
+          "googleFileConversion": {
+            "conversion": {
+              "slidesToFormat": "application/pdf"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1344,
+        0
+      ],
+      "id": "56273455-53b8-42eb-8bc3-ac82dd328a98",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "n8AZhp4OrivCbK8Z",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{$node[\"Merge\"].json[\"Email\"]}}",
+        "subject": "=🎉 Your Certificate of Participation - {{$node[\"Merge\"].json[\"Event\"]}}",
+        "message": "=<h2>Congratulations {{$node[\"Merge\"].json[\"Name\"]}}! 🎉</h2>\n\nPLEASE fill this form : - https://docs.google.com/forms/d/e/1FAIpQLSfcZ31VeBAKGRJhm5votrA6a0xyBO3AqMNVl1rLoD7vV5OtGg/viewform?usp=header\n\n\n<p>Thank you for participating in <b>{{$node[\"Merge\"].json[\"Event\"]}}</b>.</p>\n\n<p>Please find your certificate attached.</p>\n\n<p>We hope to see you again in our future events.</p>\n\n<br>\n\nRegards,<br>\n<b>EventPilot AI Team</b>",
+        "options": {
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {}
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1568,
+        0
+      ],
+      "id": "8d362629-2771-4bfa-9a82-41bbcb08e506",
+      "name": "Send a message",
+      "webhookId": "a28eb256-a86c-4308-adba-4780711155e7",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "SGDyfw75U5jGemA2",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "13RfCRYW6INDplK1nRrJMrT_EqqF2apCGgdMXuQDEDYI",
+          "mode": "list",
+          "cachedResultName": "EventPilot AI Database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13RfCRYW6INDplK1nRrJMrT_EqqF2apCGgdMXuQDEDYI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Participants",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13RfCRYW6INDplK1nRrJMrT_EqqF2apCGgdMXuQDEDYI/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Certificate Sent": "yes",
+            "ParticipantID": "={{$node[\"Merge\"].json[\"ParticipantID\"]}}"
+          },
+          "matchingColumns": [
+            "ParticipantID"
+          ],
+          "schema": [
+            {
+              "id": "ParticipantID",
+              "displayName": "ParticipantID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "College",
+              "displayName": "College",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Event",
+              "displayName": "Event",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Registration Time",
+              "displayName": "Registration Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "QR Code Link",
+              "displayName": "QR Code Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Attendance",
+              "displayName": "Attendance",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Certificate Sent",
+              "displayName": "Certificate Sent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Check-In Time",
+              "displayName": "Check-In Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1792,
+        0
+      ],
+      "id": "6860ef53-dee3-4cdc-872b-afc32c1c5c3f",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "38AIGevkzcdoUwiK",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        448,
+        32
+      ],
+      "id": "7ada08e7-5b25-4ab2-88fe-31497311b298",
+      "name": "Loop Over Items"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Copy file": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Replace text in a presentation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace text in a presentation": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Copy file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "650c4baf-0796-4dce-9674-7020033cfdf9",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "37f159001c98304b3432bc43d0df11ee68bedb94fc094afd571f710e4d04bcf3"
+  },
+  "nodeGroups": [],
+  "id": "WH0DSqQtJR26jicf",
+  "tags": []
+}
