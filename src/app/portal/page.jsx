@@ -27,16 +27,8 @@ export default function StudentPortalPage() {
         setUser(data.user);
         setRegistrations(data.registrations || []);
       } else {
-        // Automatically default to demo participant for instant access
-        setUser({
-          fullName: 'Heemanshu Sharma',
-          email: 'heemanshu20077@gmail.com',
-          college: 'Antigravity AI Tech Institute',
-          isDemo: true,
-        });
-        const regRes = await fetch('/api/events');
-        const regData = await regRes.json();
-        setRegistrations(regData.registrations || []);
+        window.location.href = '/login';
+        return;
       }
     } catch (err) {
       console.error('Error loading portal:', err);
@@ -52,21 +44,6 @@ export default function StudentPortalPage() {
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
     window.location.href = '/login';
-  };
-
-  const handleQuickDemoLogin = async () => {
-    setLoading(true);
-    try {
-      await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: 'heemanshu20077@gmail.com', password: 'password123' }),
-      });
-      await loadPortalData();
-    } catch (e) {
-      console.error(e);
-      setLoading(false);
-    }
   };
 
   const handleLookup = async (e) => {
@@ -91,7 +68,7 @@ export default function StudentPortalPage() {
       if (found) {
         setLookupResult(found);
       } else {
-        setLookupError(`No registration pass found matching "${lookupQuery}". Try "EVT-000002" or "heemanshu20077@gmail.com".`);
+        setLookupError(`No registration pass found matching "${lookupQuery}". Please check your Participant ID or email.`);
       }
     } catch (err) {
       setLookupError('Failed to search registrations.');
@@ -131,24 +108,12 @@ export default function StudentPortalPage() {
               <span style={{ fontSize: '0.8125rem', color: 'var(--accent-primary)', fontWeight: 700, letterSpacing: '0.05em' }}>
                 STUDENT ACCESS PORTAL
               </span>
-              {user?.isDemo && (
-                <span style={{
-                  fontSize: '0.75rem',
-                  padding: '1px 8px',
-                  background: 'var(--accent-subtle)',
-                  color: 'var(--accent-primary)',
-                  borderRadius: '12px',
-                  fontWeight: 600,
-                }}>
-                  Demo Mode
-                </span>
-              )}
             </div>
             <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: '2px' }}>
               Welcome, {user?.fullName || 'Participant'}
             </h1>
             <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-              {user?.email} • {user?.college || 'Registered Attendee'}
+              {user?.email} {user?.college ? `• ${user.college}` : ''}
             </p>
           </div>
 
@@ -156,17 +121,10 @@ export default function StudentPortalPage() {
             <Link href="/#events-matrix" className="btn-secondary btn-sm">
               Explore Events Catalog
             </Link>
-            {user?.isDemo ? (
-              <button onClick={handleQuickDemoLogin} className="btn-primary btn-sm" style={{ gap: '6px' }}>
-                <Sparkles size={14} />
-                Activate Full Session
-              </button>
-            ) : (
-              <button onClick={handleLogout} className="btn-secondary btn-sm" style={{ gap: '6px' }}>
-                <LogOut size={14} />
-                Sign Out
-              </button>
-            )}
+            <button onClick={handleLogout} className="btn-secondary btn-sm" style={{ gap: '6px' }}>
+              <LogOut size={14} />
+              Sign Out
+            </button>
           </div>
         </div>
 
@@ -178,7 +136,7 @@ export default function StudentPortalPage() {
                 Instant Pass & Certificate Lookup
               </h3>
               <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                Search any Participant ID (e.g. <code style={{ fontFamily: 'var(--font-mono)' }}>EVT-000002</code>) or email to pull on-screen badge.
+                Search your Participant ID (e.g. <code style={{ fontFamily: 'var(--font-mono)' }}>EVT-000001</code>) or email to pull on-screen badge.
               </p>
             </div>
 

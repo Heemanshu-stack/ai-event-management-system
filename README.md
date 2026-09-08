@@ -125,13 +125,13 @@ Open **[http://localhost:3000](http://localhost:3000)** in your browser.
 
 ---
 
-## 🔑 Demo Credentials
+## 🔑 System Credentials & Access
 
-| Role | Access Route | Password / Passkey | Shortcut |
+| Role | Access Route | Username | Password / Passkey |
 | :--- | :--- | :--- | :--- |
-| **Student** | `/portal` or `/login` | `heemanshu20077@gmail.com` / `password123` | 1-Click Demo Login on Login page |
-| **Staff Scanner** | `/staff` | `staff2026` | 1-Click Passkey entry on Login page |
-| **Admin Command** | `/admin` | `admin2026` | 1-Click Passkey entry on Login page |
+| **Admin Command** | `/admin` or `/login` | `admin` | `admin2026` |
+| **Staff Scanner** | `/staff` or `/login` | `staff` | `staff2026` |
+| **Student** | `/portal` or `/login` | *(Create Account)* | *Set by student during registration* |
 
 ---
 

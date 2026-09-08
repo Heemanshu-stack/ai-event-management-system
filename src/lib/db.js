@@ -59,38 +59,9 @@ let eventsStore = [
   }
 ];
 
-let usersStore = [
-  {
-    id: 'USR-001',
-    username: 'heemanshu',
-    email: 'heemanshu20077@gmail.com',
-    fullName: 'Heemanshu Sharma',
-    phone: '9876543210',
-    college: 'Antigravity AI Tech Institute',
-    role: 'student',
-    // bcrypt hash of 'password123'
-    passwordHash: '$2a$10$wE9OqK59rC1z3ZgGj9f0.eZgL41k2hS/cI7jJbWwU74dEhzXjRhyK',
-    createdAt: '2026-09-06T10:00:00Z'
-  }
-];
+let usersStore = [];
 
-let registrationsStore = [
-  {
-    participantId: 'EVT-000002',
-    teamId: 'TEAM-1002',
-    eventId: 'EVT-H-001',
-    eventName: 'AI Innovation Hackathon',
-    fullName: 'Heemanshu Sharma',
-    email: 'heemanshu20077@gmail.com',
-    phone: '9876543210',
-    college: 'Antigravity AI Tech Institute',
-    registrationTime: '2026-09-08T11:42:55Z',
-    attendance: 'Present',
-    checkInTime: '2026-09-08T12:05:00Z',
-    certificateSent: 'yes',
-    qrCodeLink: 'https://drive.google.com/file/d/1KfecF4eOY626Wk9s_-WH0HYPrz-Yr7ix/view?usp=drivesdk'
-  }
-];
+let registrationsStore = [];
 
 export function getEvents() {
   return eventsStore;
