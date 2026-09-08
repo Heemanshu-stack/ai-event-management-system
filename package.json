@@ -1,11 +1,12 @@
 {
-  "name": "ai-event-management-system",
+  "name": "eventpilot-ai",
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "npm --prefix website run dev",
-    "build": "npm --prefix website run build",
-    "start": "npm --prefix website run start"
+    "dev": "next dev -p 3000",
+    "build": "next build",
+    "start": "next start -p 3000",
+    "lint": "next lint"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
