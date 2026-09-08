@@ -69,6 +69,7 @@
       "parameters": {
         "httpMethod": "POST",
         "path": "event-registration",
+        "responseMode": "responseNode",
         "options": {}
       },
       "type": "n8n-nodes-base.webhook",
@@ -271,6 +272,21 @@
       ],
       "id": "w1-reg-node-4",
       "name": "W1-Reg: Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"participantId\": \"{{ $json.participantId }}\",\n  \"teamId\": \"{{ $json.teamId }}\",\n  \"qrCodeUrl\": \"https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={{ encodeURIComponent($json.participantId) }}\",\n  \"fullName\": \"{{ $json.fullName }}\",\n  \"email\": \"{{ $json.email }}\",\n  \"event\": \"{{ $json.event }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -80,
+        -560
+      ],
+      "id": "w1-reg-node-respond",
+      "name": "W1-Reg: Respond to Webhook"
     },
     {
       "parameters": {
@@ -1492,6 +1508,11 @@
         [
           {
             "node": "W1-Reg: Append row in sheet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "W1-Reg: Respond to Webhook",
             "type": "main",
             "index": 0
           }
