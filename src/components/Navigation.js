@@ -42,12 +42,16 @@ export default function Navigation() {
     return null;
   }
 
-  const navLinks = [
-    { href: '/', label: 'Events Matrix', icon: Calendar },
-    { href: '/portal', label: 'Student Portal', icon: User },
-    { href: '/staff', label: 'Staff Scanner', icon: QrCode },
-    { href: '/admin', label: 'Admin Command', icon: Shield },
+  // Define links with allowed roles
+  const allNavLinks = [
+    { href: '/', label: 'Events Matrix', icon: Calendar, roles: ['admin', 'staff', 'student'] },
+    { href: '/portal', label: 'Student Portal', icon: User, roles: ['admin', 'student'] },
+    { href: '/staff', label: 'Staff Scanner', icon: QrCode, roles: ['admin', 'staff'] },
+    { href: '/admin', label: 'Admin Command', icon: Shield, roles: ['admin'] },
   ];
+
+  const currentRole = currentUser?.role || 'student';
+  const navLinks = allNavLinks.filter((link) => link.roles.includes(currentRole));
 
   return (
     <header style={{

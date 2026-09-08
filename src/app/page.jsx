@@ -71,22 +71,32 @@ export default function HomePage() {
   const [previewEvent, setPreviewEvent] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState('ALL');
+  const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
-    async function fetchEvents() {
+    async function fetchEventsAndUser() {
       try {
-        const res = await fetch('/api/events');
-        if (res.ok) {
-          const data = await res.json();
+        const [evtRes, userRes] = await Promise.allSettled([
+          fetch('/api/events'),
+          fetch('/api/auth/me')
+        ]);
+
+        if (evtRes.status === 'fulfilled' && evtRes.value.ok) {
+          const data = await evtRes.value.json();
           if (data.events && data.events.length > 0) {
             setEvents(data.events);
           }
         }
+
+        if (userRes.status === 'fulfilled' && userRes.value.ok) {
+          const userData = await userRes.value.json();
+          setCurrentUser(userData.user);
+        }
       } catch (err) {
-        console.error('Failed to refresh events from API', err);
+        console.error('Failed to load page data', err);
       }
     }
-    fetchEvents();
+    fetchEventsAndUser();
   }, []);
 
   const openRegister = (event) => {
@@ -170,15 +180,21 @@ export default function HomePage() {
               <a href="#events-matrix" className="btn-primary">
                 Browse Active Events
               </a>
-              <Link href="/portal" className="btn-secondary">
-                Student Access Portal
-              </Link>
-              <Link href="/staff" className="btn-secondary">
-                Staff QR Scanner
-              </Link>
-              <Link href="/admin" className="btn-secondary">
-                Admin Command
-              </Link>
+              {(!currentUser || currentUser.role === 'student' || currentUser.role === 'admin') && (
+                <Link href="/portal" className="btn-secondary">
+                  Student Access Portal
+                </Link>
+              )}
+              {(currentUser?.role === 'staff' || currentUser?.role === 'admin') && (
+                <Link href="/staff" className="btn-secondary">
+                  Staff QR Scanner
+                </Link>
+              )}
+              {currentUser?.role === 'admin' && (
+                <Link href="/admin" className="btn-secondary">
+                  Admin Command
+                </Link>
+              )}
             </div>
           </div>
 
