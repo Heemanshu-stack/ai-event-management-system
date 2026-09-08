@@ -110,14 +110,17 @@ function LoginForm() {
   };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '40px 16px',
-      background: 'var(--bg-canvas)',
-    }}>
+    <div
+      className="login-page-container"
+      style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '40px 16px',
+        background: 'var(--bg-canvas)',
+      }}
+    >
       <div style={{ width: '100%', maxWidth: '460px' }}>
         
         {/* Top Brand Header */}

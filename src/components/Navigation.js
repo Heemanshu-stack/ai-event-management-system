@@ -37,8 +37,8 @@ export default function Navigation() {
     router.refresh();
   };
 
-  // On login page, show minimal top bar
-  if (pathname === '/login') {
+  // On login page, completely hide top menu bar
+  if (!pathname || pathname.startsWith('/login')) {
     return null;
   }
 

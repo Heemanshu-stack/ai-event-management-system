@@ -318,3 +318,10 @@ button, input, select, textarea {
     grid-template-columns: 1fr;
   }
 }
+
+/* Hide upper menu and footer completely on login page */
+body:has(.login-page-container) header,
+body:has(.login-page-container) footer {
+  display: none !important;
+}
+

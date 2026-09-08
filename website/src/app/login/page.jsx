@@ -1,34 +1,60 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Lock, Mail, User, Phone, School, AlertCircle, Loader2, Sparkles, Shield, QrCode } from 'lucide-react';
+import { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Lock, Mail, User, Phone, School, AlertCircle, Loader2, Sparkles, Shield, QrCode, ArrowRight, CheckCircle2, KeyRound } from 'lucide-react';
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [formData, setFormData] = useState({
-    email: 'heemanshu20077@gmail.com',
-    password: 'password123',
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get('redirect') || '/';
+
+  const [activeTab, setActiveTab] = useState('signin'); // 'signin' | 'signup'
+  
+  // Sign In Form State
+  const [signInData, setSignInData] = useState({
+    username: 'admin',
+    password: 'admin2026',
+  });
+
+  // Sign Up Form State
+  const [signUpData, setSignUpData] = useState({
     fullName: '',
+    username: '',
+    email: '',
     phone: '',
     college: '',
+    password: '',
   });
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
 
-  const handleSubmit = async (e) => {
+  // 1-Click Fast Fill Presets
+  const handleFastFill = (role) => {
+    setError('');
+    setActiveTab('signin');
+    if (role === 'admin') {
+      setSignInData({ username: 'admin', password: 'admin2026' });
+    } else if (role === 'staff') {
+      setSignInData({ username: 'staff', password: 'staff2026' });
+    } else if (role === 'student') {
+      setSignInData({ username: 'heemanshu', password: 'password123' });
+    }
+  };
+
+  const handleSignInSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-
-    const endpoint = isSignUp ? '/api/auth/register' : '/api/auth/login';
+    setSuccessMsg('');
 
     try {
-      const res = await fetch(endpoint, {
+      const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(signInData),
       });
 
       const data = await res.json();
@@ -36,52 +62,233 @@ export default function LoginPage() {
         throw new Error(data.error || 'Authentication failed');
       }
 
-      router.push('/portal');
+      // Store passkey flags for staff & admin client views
+      if (data.role === 'admin') {
+        sessionStorage.setItem('admin_auth', 'true');
+        sessionStorage.setItem('staff_auth', 'true');
+        router.push(data.redirectUrl || '/admin');
+      } else if (data.role === 'staff') {
+        sessionStorage.setItem('staff_auth', 'true');
+        router.push(data.redirectUrl || '/staff');
+      } else {
+        router.push(redirectUrl === '/login' ? '/' : redirectUrl);
+      }
     } catch (err) {
-      setError(err.message || 'An error occurred during authentication');
+      setError(err.message || 'Error signing in');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleQuickDemoStudent = async () => {
+  const handleSignUpSubmit = async (e) => {
+    e.preventDefault();
     setLoading(true);
+    setError('');
+    setSuccessMsg('');
+
     try {
-      await fetch('/api/auth/login', {
+      const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: 'heemanshu20077@gmail.com', password: 'password123' }),
+        body: JSON.stringify(signUpData),
       });
-      router.push('/portal');
-    } catch (e) {
-      router.push('/portal');
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Registration failed');
+      }
+
+      setSuccessMsg('Account created successfully! Entering platform...');
+      setTimeout(() => {
+        router.push(redirectUrl === '/login' ? '/' : redirectUrl);
+      }, 500);
+    } catch (err) {
+      setError(err.message || 'Error creating account');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div style={{ padding: '60px 0', minHeight: 'calc(100vh - 180px)', display: 'flex', alignItems: 'center' }}>
-      <div className="container" style={{ maxWidth: '440px' }}>
-        <div className="surface-card" style={{ padding: '32px' }}>
-          
-          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-              {isSignUp ? 'Create Student Account' : 'Student Access Portal'}
-            </h1>
-            <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
-              {isSignUp
-                ? 'Sign up to register for hackathons, workshops, and manage your team badges.'
-                : 'Sign in to view your Team ID, check-in status, and download certificates.'}
-            </p>
+    <div
+      className="login-page-container"
+      style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '40px 16px',
+        background: 'var(--bg-canvas)',
+      }}
+    >
+      <div style={{ width: '100%', maxWidth: '460px' }}>
+        
+        {/* Top Brand Header */}
+        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '6px 14px',
+            background: 'var(--bg-surface)',
+            border: '1px solid var(--border-subtle)',
+            borderRadius: '20px',
+            fontSize: '0.8125rem',
+            fontWeight: 600,
+            color: 'var(--text-secondary)',
+            marginBottom: '16px',
+          }}>
+            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--accent-primary)' }} />
+            EventPilot AI Platform Gateway
           </div>
 
+          <h1 style={{
+            fontSize: '1.75rem',
+            fontWeight: 800,
+            color: 'var(--text-primary)',
+            letterSpacing: '-0.03em',
+            marginBottom: '6px',
+          }}>
+            Authentication Required
+          </h1>
+          <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+            Sign in with your credentials to access events, operations, and control.
+          </p>
+        </div>
+
+        {/* Card Container */}
+        <div className="surface-card" style={{ padding: '32px', boxShadow: 'var(--shadow-card)' }}>
+          
+          {/* Quick Credential Badges Strip */}
+          <div style={{
+            marginBottom: '20px',
+            padding: '12px',
+            background: 'var(--bg-surface-subtle)',
+            borderRadius: 'var(--radius-sm)',
+            border: '1px solid var(--border-subtle)',
+          }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '8px', textTransform: 'uppercase' }}>
+              Quick 1-Click Role Login:
+            </span>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
+              <button
+                type="button"
+                onClick={() => handleFastFill('admin')}
+                style={{
+                  padding: '6px 8px',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  border: '1px solid var(--border-subtle)',
+                  borderRadius: '4px',
+                  background: signInData.username === 'admin' ? 'var(--text-primary)' : '#FFFFFF',
+                  color: signInData.username === 'admin' ? '#FFFFFF' : 'var(--text-primary)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '4px',
+                }}
+              >
+                <Shield size={12} /> Admin
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleFastFill('staff')}
+                style={{
+                  padding: '6px 8px',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  border: '1px solid var(--border-subtle)',
+                  borderRadius: '4px',
+                  background: signInData.username === 'staff' ? 'var(--text-primary)' : '#FFFFFF',
+                  color: signInData.username === 'staff' ? '#FFFFFF' : 'var(--text-primary)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '4px',
+                }}
+              >
+                <QrCode size={12} /> Staff
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleFastFill('student')}
+                style={{
+                  padding: '6px 8px',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  border: '1px solid var(--border-subtle)',
+                  borderRadius: '4px',
+                  background: signInData.username === 'heemanshu' ? 'var(--text-primary)' : '#FFFFFF',
+                  color: signInData.username === 'heemanshu' ? '#FFFFFF' : 'var(--text-primary)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '4px',
+                }}
+              >
+                <User size={12} /> Student
+              </button>
+            </div>
+          </div>
+
+          {/* Mode Switch Tabs */}
+          <div style={{
+            display: 'flex',
+            borderBottom: '1px solid var(--border-subtle)',
+            marginBottom: '20px',
+          }}>
+            <button
+              type="button"
+              onClick={() => { setActiveTab('signin'); setError(''); }}
+              style={{
+                flex: 1,
+                padding: '10px 0',
+                fontSize: '0.875rem',
+                fontWeight: activeTab === 'signin' ? 700 : 500,
+                color: activeTab === 'signin' ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                borderBottom: activeTab === 'signin' ? '2px solid var(--accent-primary)' : 'none',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                textAlign: 'center',
+              }}
+            >
+              Sign In
+            </button>
+            <button
+              type="button"
+              onClick={() => { setActiveTab('signup'); setError(''); }}
+              style={{
+                flex: 1,
+                padding: '10px 0',
+                fontSize: '0.875rem',
+                fontWeight: activeTab === 'signup' ? 700 : 500,
+                color: activeTab === 'signup' ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                borderBottom: activeTab === 'signup' ? '2px solid var(--accent-primary)' : 'none',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                textAlign: 'center',
+              }}
+            >
+              Create Student Account
+            </button>
+          </div>
+
+          {/* Error & Success Messages */}
           {error && (
             <div style={{
               background: '#FEF2F2',
               border: '1px solid #FCA5A5',
               color: '#991B1B',
-              padding: '10px 14px',
+              padding: '10px 12px',
               borderRadius: 'var(--radius-sm)',
-              fontSize: '0.875rem',
+              fontSize: '0.8125rem',
               marginBottom: '16px',
               display: 'flex',
               alignItems: 'center',
@@ -92,25 +299,109 @@ export default function LoginPage() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              
-              {isSignUp && (
-                <>
+          {successMsg && (
+            <div style={{
+              background: '#F0FDF4',
+              border: '1px solid #86EFAC',
+              color: '#166534',
+              padding: '10px 12px',
+              borderRadius: 'var(--radius-sm)',
+              fontSize: '0.8125rem',
+              marginBottom: '16px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+            }}>
+              <CheckCircle2 size={16} />
+              <span>{successMsg}</span>
+            </div>
+          )}
+
+          {/* Sign In Form */}
+          {activeTab === 'signin' && (
+            <form onSubmit={handleSignInSubmit}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, marginBottom: '4px' }}>
+                    Username or Email
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="admin, staff, or student email"
+                    className="input-field"
+                    value={signInData.username}
+                    onChange={(e) => setSignInData({ ...signInData, username: e.target.value })}
+                  />
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px', display: 'block' }}>
+                    Admin: <code style={{ fontFamily: 'var(--font-mono)' }}>admin</code> | Staff: <code style={{ fontFamily: 'var(--font-mono)' }}>staff</code>
+                  </span>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, marginBottom: '4px' }}>
+                    Password
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    placeholder="••••••••"
+                    className="input-field"
+                    value={signInData.password}
+                    onChange={(e) => setSignInData({ ...signInData, password: e.target.value })}
+                  />
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px', display: 'block' }}>
+                    Admin: <code style={{ fontFamily: 'var(--font-mono)' }}>admin2026</code> | Staff: <code style={{ fontFamily: 'var(--font-mono)' }}>staff2026</code>
+                  </span>
+                </div>
+
+                <div style={{ marginTop: '8px' }}>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="btn-primary"
+                    style={{ width: '100%', gap: '8px', justifyContent: 'center' }}
+                  >
+                    {loading && <Loader2 size={16} className="animate-spin" />}
+                    {loading ? 'Authenticating...' : 'Sign In & Enter Site'}
+                  </button>
+                </div>
+              </div>
+            </form>
+          )}
+
+          {/* Sign Up Form (New Student) */}
+          {activeTab === 'signup' && (
+            <form onSubmit={handleSignUpSubmit}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, marginBottom: '4px' }}>
+                    Full Legal Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Rahul Sharma"
+                    className="input-field"
+                    value={signUpData.fullName}
+                    onChange={(e) => setSignUpData({ ...signUpData, fullName: e.target.value })}
+                  />
+                </div>
+
+                <div className="grid-2">
                   <div>
                     <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, marginBottom: '4px' }}>
-                      Full Legal Name
+                      Username
                     </label>
                     <input
                       type="text"
                       required
-                      placeholder="Heemanshu Sharma"
+                      placeholder="e.g. rahul"
                       className="input-field"
-                      value={formData.fullName}
-                      onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                      value={signUpData.username}
+                      onChange={(e) => setSignUpData({ ...signUpData, username: e.target.value })}
                     />
                   </div>
-
                   <div>
                     <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, marginBottom: '4px' }}>
                       Contact Phone
@@ -118,152 +409,87 @@ export default function LoginPage() {
                     <input
                       type="tel"
                       required
-                      placeholder="+91 98765 43210"
+                      placeholder="9876543210"
                       className="input-field"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      value={signUpData.phone}
+                      onChange={(e) => setSignUpData({ ...signUpData, phone: e.target.value })}
                     />
                   </div>
+                </div>
 
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, marginBottom: '4px' }}>
-                      Institution / College
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="Tech Institute of AI"
-                      className="input-field"
-                      value={formData.college}
-                      onChange={(e) => setFormData({ ...formData, college: e.target.value })}
-                    />
-                  </div>
-                </>
-              )}
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, marginBottom: '4px' }}>
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="rahul@university.edu"
+                    className="input-field"
+                    value={signUpData.email}
+                    onChange={(e) => setSignUpData({ ...signUpData, email: e.target.value })}
+                  />
+                </div>
 
-              <div>
-                <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, marginBottom: '4px' }}>
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  required
-                  placeholder="name@university.edu"
-                  className="input-field"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                />
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, marginBottom: '4px' }}>
+                    Institution / College
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Delhi Technological University"
+                    className="input-field"
+                    value={signUpData.college}
+                    onChange={(e) => setSignUpData({ ...signUpData, college: e.target.value })}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, marginBottom: '4px' }}>
+                    Password
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    placeholder="Create a strong password"
+                    className="input-field"
+                    value={signUpData.password}
+                    onChange={(e) => setSignUpData({ ...signUpData, password: e.target.value })}
+                  />
+                </div>
+
+                <div style={{ marginTop: '8px' }}>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="btn-primary"
+                    style={{ width: '100%', gap: '8px', justifyContent: 'center' }}
+                  >
+                    {loading && <Loader2 size={16} className="animate-spin" />}
+                    {loading ? 'Creating Account...' : 'Create Student Account & Enter'}
+                  </button>
+                </div>
               </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, marginBottom: '4px' }}>
-                  Account Password
-                </label>
-                <input
-                  type="password"
-                  required
-                  placeholder="••••••••"
-                  className="input-field"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                />
-              </div>
-
-              <div style={{ marginTop: '8px' }}>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="btn-primary"
-                  style={{ width: '100%', gap: '8px' }}
-                >
-                  {loading && <Loader2 size={16} className="animate-spin" />}
-                  {loading ? 'Authenticating...' : isSignUp ? 'Create Account' : 'Sign In'}
-                </button>
-              </div>
-            </div>
-          </form>
-
-          {/* Presentation Demo Quick Access */}
-          <div style={{
-            marginTop: '24px',
-            paddingTop: '20px',
-            borderTop: '1px solid var(--border-subtle)',
-          }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', marginBottom: '10px', textAlign: 'center' }}>
-              Presentation Demo Shortcuts
-            </span>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <button
-                type="button"
-                onClick={handleQuickDemoStudent}
-                className="btn-secondary btn-sm"
-                style={{ width: '100%', gap: '6px', justifyContent: 'center' }}
-              >
-                <Sparkles size={14} color="var(--accent-primary)" />
-                Quick Login as Demo Student
-              </button>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    sessionStorage.setItem('staff_auth', 'true');
-                    router.push('/staff');
-                  }}
-                  className="btn-secondary btn-sm"
-                  style={{ gap: '6px', justifyContent: 'center' }}
-                >
-                  <QrCode size={14} /> Staff Scanner
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    sessionStorage.setItem('admin_auth', 'true');
-                    router.push('/admin');
-                  }}
-                  className="btn-secondary btn-sm"
-                  style={{ gap: '6px', justifyContent: 'center' }}
-                >
-                  <Shield size={14} /> Admin Panel
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div style={{
-            marginTop: '16px',
-            textAlign: 'center',
-            fontSize: '0.875rem',
-            color: 'var(--text-secondary)',
-          }}>
-            {isSignUp ? (
-              <span>
-                Already have an account?{' '}
-                <button
-                  type="button"
-                  onClick={() => setIsSignUp(false)}
-                  style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', fontWeight: 600, cursor: 'pointer' }}
-                >
-                  Sign In
-                </button>
-              </span>
-            ) : (
-              <span>
-                New participant?{' '}
-                <button
-                  type="button"
-                  onClick={() => setIsSignUp(true)}
-                  style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', fontWeight: 600, cursor: 'pointer' }}
-                >
-                  Create Account
-                </button>
-              </span>
-            )}
-          </div>
+            </form>
+          )}
 
         </div>
+
       </div>
     </div>
   );
 }
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Loader2 size={32} className="animate-spin" color="var(--accent-primary)" />
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
