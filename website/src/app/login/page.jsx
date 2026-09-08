@@ -11,10 +11,10 @@ function LoginForm() {
 
   const [activeTab, setActiveTab] = useState('signin'); // 'signin' | 'signup'
   
-  // Sign In Form State
+  // Sign In Form State (empty by default)
   const [signInData, setSignInData] = useState({
-    username: 'admin',
-    password: 'admin2026',
+    username: '',
+    password: '',
   });
 
   // Sign Up Form State
@@ -328,14 +328,11 @@ function LoginForm() {
                   <input
                     type="text"
                     required
-                    placeholder="admin, staff, or student email"
+                    placeholder="Enter your username or email"
                     className="input-field"
                     value={signInData.username}
                     onChange={(e) => setSignInData({ ...signInData, username: e.target.value })}
                   />
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px', display: 'block' }}>
-                    Admin: <code style={{ fontFamily: 'var(--font-mono)' }}>admin</code> | Staff: <code style={{ fontFamily: 'var(--font-mono)' }}>staff</code>
-                  </span>
                 </div>
 
                 <div>
@@ -345,14 +342,11 @@ function LoginForm() {
                   <input
                     type="password"
                     required
-                    placeholder="••••••••"
+                    placeholder="Enter your password"
                     className="input-field"
                     value={signInData.password}
                     onChange={(e) => setSignInData({ ...signInData, password: e.target.value })}
                   />
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px', display: 'block' }}>
-                    Admin: <code style={{ fontFamily: 'var(--font-mono)' }}>admin2026</code> | Staff: <code style={{ fontFamily: 'var(--font-mono)' }}>staff2026</code>
-                  </span>
                 </div>
 
                 <div style={{ marginTop: '8px' }}>
