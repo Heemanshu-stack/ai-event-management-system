@@ -31,19 +31,6 @@ function LoginForm() {
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
-  // 1-Click Fast Fill Presets
-  const handleFastFill = (role) => {
-    setError('');
-    setActiveTab('signin');
-    if (role === 'admin') {
-      setSignInData({ username: 'admin', password: 'admin2026' });
-    } else if (role === 'staff') {
-      setSignInData({ username: 'staff', password: 'staff2026' });
-    } else if (role === 'student') {
-      setSignInData({ username: 'heemanshu', password: 'password123' });
-    }
-  };
-
   const handleSignInSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -159,83 +146,6 @@ function LoginForm() {
         {/* Card Container */}
         <div className="surface-card" style={{ padding: '32px', boxShadow: 'var(--shadow-card)' }}>
           
-          {/* Quick Credential Badges Strip */}
-          <div style={{
-            marginBottom: '20px',
-            padding: '12px',
-            background: 'var(--bg-surface-subtle)',
-            borderRadius: 'var(--radius-sm)',
-            border: '1px solid var(--border-subtle)',
-          }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '8px', textTransform: 'uppercase' }}>
-              Quick 1-Click Role Login:
-            </span>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
-              <button
-                type="button"
-                onClick={() => handleFastFill('admin')}
-                style={{
-                  padding: '6px 8px',
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  border: '1px solid var(--border-subtle)',
-                  borderRadius: '4px',
-                  background: signInData.username === 'admin' ? 'var(--text-primary)' : '#FFFFFF',
-                  color: signInData.username === 'admin' ? '#FFFFFF' : 'var(--text-primary)',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '4px',
-                }}
-              >
-                <Shield size={12} /> Admin
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleFastFill('staff')}
-                style={{
-                  padding: '6px 8px',
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  border: '1px solid var(--border-subtle)',
-                  borderRadius: '4px',
-                  background: signInData.username === 'staff' ? 'var(--text-primary)' : '#FFFFFF',
-                  color: signInData.username === 'staff' ? '#FFFFFF' : 'var(--text-primary)',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '4px',
-                }}
-              >
-                <QrCode size={12} /> Staff
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleFastFill('student')}
-                style={{
-                  padding: '6px 8px',
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  border: '1px solid var(--border-subtle)',
-                  borderRadius: '4px',
-                  background: signInData.username === 'heemanshu' ? 'var(--text-primary)' : '#FFFFFF',
-                  color: signInData.username === 'heemanshu' ? '#FFFFFF' : 'var(--text-primary)',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '4px',
-                }}
-              >
-                <User size={12} /> Student
-              </button>
-            </div>
-          </div>
-
           {/* Mode Switch Tabs */}
           <div style={{
             display: 'flex',
@@ -319,7 +229,7 @@ function LoginForm() {
 
           {/* Sign In Form */}
           {activeTab === 'signin' && (
-            <form onSubmit={handleSignInSubmit}>
+            <form onSubmit={handleSignInSubmit} autoComplete="off">
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, marginBottom: '4px' }}>
@@ -328,6 +238,7 @@ function LoginForm() {
                   <input
                     type="text"
                     required
+                    autoComplete="off"
                     placeholder="Enter your username or email"
                     className="input-field"
                     value={signInData.username}
@@ -342,6 +253,7 @@ function LoginForm() {
                   <input
                     type="password"
                     required
+                    autoComplete="new-password"
                     placeholder="Enter your password"
                     className="input-field"
                     value={signInData.password}
