@@ -171,10 +171,10 @@
         },
         "sheetName": {
           "__rl": true,
-          "value": 321896411,
+          "value": "gid=0",
           "mode": "list",
-          "cachedResultName": "Form responses 1",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13RfCRYW6INDplK1nRrJMrT_EqqF2apCGgdMXuQDEDYI/edit#gid=321896411"
+          "cachedResultName": "Participants",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13RfCRYW6INDplK1nRrJMrT_EqqF2apCGgdMXuQDEDYI/edit#gid=0"
         },
         "options": {}
       },
@@ -195,7 +195,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const participants = $input.all();\n\nconst nextNumber = participants.length + 1;\n\nconst participantId = `EVT-${String(nextNumber).padStart(6, '0')}`;\n\nconst body = $('Webhook').first().json.body;\n\nreturn [{\n  json: {\n    participantId,\n    timestamp: body.timestamp,\n    fullName: body.fullName,\n    email: body.email,\n    phone: body.phone,\n    college: body.college,\n    event: body.event,\n    consent: body.consent\n  }\n}];"
+        "jsCode": "const participants = $input.all();\nlet maxNumber = 0;\nfor (const item of participants) {\n  const pid = String(item.json.ParticipantID || item.json['Participant ID'] || item.json.participantId || '');\n  const match = pid.match(/\\d+/);\n  if (match) {\n    const num = parseInt(match[0], 10);\n    if (!isNaN(num) && num > maxNumber) {\n      maxNumber = num;\n    }\n  }\n}\nconst nextNumber = maxNumber > 0 ? maxNumber + 1 : (participants.length + 1);\nconst participantId = `EVT-${String(nextNumber).padStart(6, '0')}`;\nconst teamId = `TEAM-${String(1000 + nextNumber)}`;\n\nconst body = $('Webhook').first().json.body || {};\n\nreturn [{\n  json: {\n    participantId,\n    teamId: body.teamId || teamId,\n    eventId: body.eventId || 'EVT-H-001',\n    timestamp: body.timestamp || new Date().toISOString(),\n    fullName: body.fullName || body.name || 'Participant',\n    email: body.email || '',\n    phone: body.phone || '',\n    college: body.college || '',\n    event: body.event || 'AI Innovation Hackathon',\n    consent: body.consent || true\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
