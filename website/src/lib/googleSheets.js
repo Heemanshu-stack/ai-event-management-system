@@ -2,29 +2,41 @@
 const SHEET_ID = '13RfCRYW6INDplK1nRrJMrT_EqqF2apCGgdMXuQDEDYI';
 const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Participants`;
 
-function parseCSVLine(line) {
-  const result = [];
+function parseFullCSV(text) {
+  const rows = [];
+  let row = [];
   let current = '';
   let inQuotes = false;
 
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i];
-    if (char === '"') {
-      if (inQuotes && line[i + 1] === '"') {
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (c === '"') {
+      if (inQuotes && text[i + 1] === '"') {
         current += '"';
         i++;
       } else {
         inQuotes = !inQuotes;
       }
-    } else if (char === ',' && !inQuotes) {
-      result.push(current.trim());
+    } else if (c === ',' && !inQuotes) {
+      row.push(current.trim().replace(/^"|"$/g, '').trim());
+      current = '';
+    } else if ((c === '\r' || c === '\n') && !inQuotes) {
+      if (c === '\r' && text[i + 1] === '\n') i++;
+      row.push(current.trim().replace(/^"|"$/g, '').trim());
+      if (row.some((x) => x.length > 0)) rows.push(row);
+      row = [];
       current = '';
     } else {
-      current += char;
+      current += c;
     }
   }
-  result.push(current.trim());
-  return result;
+
+  if (current.length > 0 || row.length > 0) {
+    row.push(current.trim().replace(/^"|"$/g, '').trim());
+    if (row.some((x) => x.length > 0)) rows.push(row);
+  }
+
+  return rows;
 }
 
 export async function fetchLiveSheetRegistrations() {
@@ -41,51 +53,58 @@ export async function fetchLiveSheetRegistrations() {
       return null;
     }
 
-    const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);
-    if (lines.length <= 1) return [];
+    const rows = parseFullCSV(text);
+    if (rows.length <= 1) return [];
 
-    const headers = parseCSVLine(lines[0]).map((h) => h.replace(/^"|"$/g, '').trim());
+    const headers = rows[0].map((h) => h.toLowerCase().trim());
 
-    const pIdIdx = headers.findIndex((h) => /participantid|participant id/i.test(h));
-    const nameIdx = headers.findIndex((h) => /^name$|^fullname$/i.test(h));
-    const emailIdx = headers.findIndex((h) => /^email$/i.test(h));
-    const phoneIdx = headers.findIndex((h) => /^phone$/i.test(h));
-    const collegeIdx = headers.findIndex((h) => /^college$/i.test(h));
-    const eventIdx = headers.findIndex((h) => /^event$/i.test(h));
-    const timeIdx = headers.findIndex((h) => /registration time|timestamp/i.test(h));
-    const qrIdx = headers.findIndex((h) => /qr code link|qr/i.test(h));
-    const attIdx = headers.findIndex((h) => /^attendance$/i.test(h));
-    const certIdx = headers.findIndex((h) => /certificate sent|certificate/i.test(h));
-    const checkInIdx = headers.findIndex((h) => /check-in time|check in/i.test(h));
-    const teamIdx = headers.findIndex((h) => /teamid|team id/i.test(h));
+    const pIdIdx = headers.findIndex((h) => h.includes('participantid') || h.includes('participant id'));
+    const nameIdx = headers.findIndex((h) => h === 'name' || h === 'fullname');
+    const emailIdx = headers.findIndex((h) => h === 'email');
+    const phoneIdx = headers.findIndex((h) => h === 'phone');
+    const collegeIdx = headers.findIndex((h) => h === 'college');
+    const eventIdx = headers.findIndex((h) => h === 'event');
+    const timeIdx = headers.findIndex((h) => h.includes('registration time') || h.includes('timestamp'));
+    const qrIdx = headers.findIndex((h) => h.includes('qr code link') || h.includes('qr'));
+    const attIdx = headers.findIndex((h) => h === 'attendance');
+    const certIdx = headers.findIndex((h) => h.includes('certificate sent') || h.includes('certificate'));
+    const checkInIdx = headers.findIndex((h) => h.includes('check-in time') || h.includes('check in'));
+    const teamIdx = headers.findIndex((h) => h.includes('teamid') || h.includes('team id'));
 
     const registrations = [];
 
-    for (let i = 1; i < lines.length; i++) {
-      const cols = parseCSVLine(lines[i]).map((c) => c.replace(/^"|"$/g, '').trim());
-      const participantId = pIdIdx >= 0 ? cols[pIdIdx] : '';
+    for (let i = 1; i < rows.length; i++) {
+      const cols = rows[i];
+      let participantId = pIdIdx >= 0 && cols[pIdIdx] ? cols[pIdIdx].trim() : '';
+
+      const match = participantId.match(/(EVT-\d+)/i);
+      if (match) {
+        participantId = match[1].toUpperCase();
+      }
 
       if (!participantId) continue;
 
+      const rawAtt = attIdx >= 0 && cols[attIdx] ? cols[attIdx].trim() : 'Pending';
+      const attendance = /present/i.test(rawAtt) ? 'Present' : 'Pending';
+
       registrations.push({
         participantId,
-        fullName: nameIdx >= 0 ? cols[nameIdx] : 'Participant',
-        email: emailIdx >= 0 ? cols[emailIdx] : '',
-        phone: phoneIdx >= 0 ? cols[phoneIdx] : '',
-        college: collegeIdx >= 0 ? cols[collegeIdx] : '',
-        eventName: eventIdx >= 0 ? cols[eventIdx] : 'Registered Event',
-        registrationTime: timeIdx >= 0 ? cols[timeIdx] : '',
-        qrCodeLink: qrIdx >= 0 ? cols[qrIdx] : '',
-        attendance: attIdx >= 0 && cols[attIdx] ? cols[attIdx] : 'Pending',
-        certificateSent: certIdx >= 0 && cols[certIdx] ? cols[certIdx] : 'No',
-        checkInTime: checkInIdx >= 0 ? cols[checkInIdx] : null,
-        teamId: teamIdx >= 0 && cols[teamIdx] ? cols[teamIdx] : `TEAM-${participantId.replace(/\D/g, '') || '1001'}`,
+        fullName: nameIdx >= 0 && cols[nameIdx] ? cols[nameIdx].trim() : 'Participant',
+        email: emailIdx >= 0 && cols[emailIdx] ? cols[emailIdx].trim() : '',
+        phone: phoneIdx >= 0 && cols[phoneIdx] ? cols[phoneIdx].trim() : '',
+        college: collegeIdx >= 0 && cols[collegeIdx] ? cols[collegeIdx].trim() : '',
+        eventName: eventIdx >= 0 && cols[eventIdx] ? cols[eventIdx].trim() : 'AI Innovation Hackathon',
+        registrationTime: timeIdx >= 0 && cols[timeIdx] ? cols[timeIdx].trim() : '',
+        qrCodeLink: qrIdx >= 0 && cols[qrIdx] ? cols[qrIdx].trim() : '',
+        attendance,
+        certificateSent: certIdx >= 0 && cols[certIdx] && /yes/i.test(cols[certIdx]) ? 'yes' : 'No',
+        checkInTime: checkInIdx >= 0 && cols[checkInIdx] ? cols[checkInIdx].trim() : null,
+        teamId: teamIdx >= 0 && cols[teamIdx] ? cols[teamIdx].trim() : `TEAM-${participantId.replace(/\D/g, '') || '1001'}`,
       });
     }
 
     return registrations;
   } catch (err) {
-    console.error('Error fetching live Google Sheet registrations:', err);
     return null;
   }
 }
