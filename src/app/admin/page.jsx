@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Shield, Plus, Sparkles, Award, BarChart3, CheckCircle2, Loader2, AlertCircle, Calendar, Users, Eye, Activity, Star, ThumbsUp, TrendingUp, RefreshCw } from 'lucide-react';
 import StatusBadge from '@/components/StatusBadge';
-import { mergeRegistrations, getLocalRegistrations } from '@/lib/clientStorage';
+import { mergeRegistrations, getLocalRegistrations, clearLocalRegistrations } from '@/lib/clientStorage';
 
 export default function AdminPage() {
   const [passkey, setPasskey] = useState('');
@@ -74,6 +74,16 @@ export default function AdminPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleClearAllRegistrations = async () => {
+    if (!confirm('Are you sure you want to clear all registrations?')) return;
+    clearLocalRegistrations();
+    try {
+      await fetch('/api/events/clear', { method: 'POST' });
+    } catch (e) {}
+    fetchAdminData();
+    alert('All registered student data cleared successfully.');
   };
 
   const handleCreateEvent = async (e) => {
@@ -263,6 +273,15 @@ export default function AdminPage() {
             >
               {aiLoading ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
               {aiLoading ? 'Analyzing Feedback...' : 'Run Groq AI Feedback Analysis'}
+            </button>
+
+            <button
+              onClick={handleClearAllRegistrations}
+              className="btn-secondary"
+              style={{ gap: '6px', color: '#DC2626', borderColor: '#FCA5A5' }}
+              title="Clear all registered students"
+            >
+              Reset All Registrations
             </button>
           </div>
         </div>

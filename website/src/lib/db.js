@@ -129,3 +129,9 @@ export function updateParticipantCertificate(participantId, status = 'yes') {
   }
   return null;
 }
+
+export function clearRegistrations() {
+  registrationsStore = [];
+  return true;
+}
+

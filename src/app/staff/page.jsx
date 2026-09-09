@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Camera, QrCode, CheckCircle2, Award, Search, Users, ShieldCheck, Send, Loader2, AlertCircle, Download, Volume2 } from 'lucide-react';
 import StatusBadge from '@/components/StatusBadge';
 import QrScannerModal from '@/components/QrScannerModal';
-import { mergeRegistrations, updateLocalAttendance, getLocalRegistrations } from '@/lib/clientStorage';
+import { mergeRegistrations, updateLocalAttendance, getLocalRegistrations, clearLocalRegistrations } from '@/lib/clientStorage';
 
 export default function StaffPortalPage() {
   const [passkey, setPasskey] = useState('');
@@ -52,6 +52,16 @@ export default function StaffPortalPage() {
       console.error('Failed to fetch roster:', err);
       setParticipants(getLocalRegistrations());
     }
+  };
+
+  const handleClearRoster = async () => {
+    if (!confirm('Are you sure you want to clear all registrations?')) return;
+    clearLocalRegistrations();
+    try {
+      await fetch('/api/events/clear', { method: 'POST' });
+    } catch (e) {}
+    fetchRoster();
+    alert('Roster registrations cleared successfully.');
   };
 
   const handleManualCheckIn = async (e) => {
@@ -267,6 +277,15 @@ export default function StaffPortalPage() {
             >
               {certLoading ? <Loader2 size={16} className="animate-spin" /> : <Award size={16} />}
               {certLoading ? 'Dispatching...' : 'Dispatch Certificates'}
+            </button>
+
+            <button
+              onClick={handleClearRoster}
+              className="btn-secondary"
+              style={{ gap: '6px', color: '#DC2626', borderColor: '#FCA5A5' }}
+              title="Clear all registered participants"
+            >
+              Reset Roster
             </button>
           </div>
         </div>

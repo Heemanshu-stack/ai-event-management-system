@@ -109,3 +109,14 @@ export function mergeRegistrations(serverRegs = []) {
 
   return Array.from(map.values());
 }
+
+export function clearLocalRegistrations() {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem('eventpilot_registrations');
+  } catch (e) {
+    console.error('Failed to clear local registrations:', e);
+  }
+}
+
