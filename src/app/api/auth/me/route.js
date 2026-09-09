@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
 import { getUserByEmail, getRegistrationsByEmail } from '@/lib/db';
+import { fetchLiveSheetRegistrations } from '@/lib/googleSheets';
 
 export async function GET(req) {
   const token = req.cookies.get('eventpilot_session')?.value;
@@ -40,7 +41,13 @@ export async function GET(req) {
   }
 
   const user = getUserByEmail(payload.email);
-  const registrations = user ? getRegistrationsByEmail(user.email) : [];
+  const liveSheetRegs = await fetchLiveSheetRegistrations();
+  let registrations = [];
+  if (liveSheetRegs && liveSheetRegs.length > 0 && payload.email) {
+    registrations = liveSheetRegs.filter(r => r.email?.toLowerCase() === payload.email.toLowerCase());
+  } else if (user) {
+    registrations = getRegistrationsByEmail(user.email);
+  }
 
   return NextResponse.json({
     user: {

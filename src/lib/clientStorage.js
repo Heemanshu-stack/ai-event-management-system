@@ -95,12 +95,14 @@ export function mergeRegistrations(serverRegs = []) {
   for (const r of localRegs) {
     const key = r.participantId ? r.participantId.toUpperCase() : `${r.email?.toLowerCase()}_${r.eventId}`;
     if (map.has(key)) {
-      // Local check-in status takes precedence if server is pending
       const serverItem = map.get(key);
+      // Server 'Present' status takes precedence across devices
+      const finalAttendance = serverItem.attendance === 'Present' ? 'Present' : (r.attendance === 'Present' ? 'Present' : (serverItem.attendance || r.attendance || 'Pending'));
       map.set(key, {
         ...serverItem,
         ...r,
-        attendance: r.attendance === 'Present' ? 'Present' : serverItem.attendance || r.attendance,
+        attendance: finalAttendance,
+        checkInTime: serverItem.checkInTime || r.checkInTime,
       });
     } else {
       map.set(key, r);

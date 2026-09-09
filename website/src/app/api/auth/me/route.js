@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
 import { getUserByEmail, getRegistrationsByEmail } from '@/lib/db';
+import { fetchLiveSheetRegistrations } from '@/lib/googleSheets';
 
 export async function GET(req) {
   const token = req.cookies.get('eventpilot_session')?.value;
@@ -14,19 +15,20 @@ export async function GET(req) {
   }
 
   const user = getUserByEmail(payload.email);
-  if (!user) {
-    return NextResponse.json({ error: 'User not found' }, { status: 404 });
+  const liveSheetRegs = await fetchLiveSheetRegistrations();
+  let registrations = [];
+  if (liveSheetRegs && liveSheetRegs.length > 0 && payload.email) {
+    registrations = liveSheetRegs.filter(r => r.email?.toLowerCase() === payload.email.toLowerCase());
+  } else if (user) {
+    registrations = getRegistrationsByEmail(user.email);
   }
 
-  const registrations = getRegistrationsByEmail(user.email);
-
   return NextResponse.json({
-    user: {
-      id: user.id,
-      email: user.email,
-      fullName: user.fullName,
-      phone: user.phone,
-      college: user.college,
+    user: user || {
+      id: payload.id || 'USR-001',
+      email: payload.email,
+      fullName: payload.fullName || payload.name || 'Participant',
+      role: payload.role || 'student',
     },
     registrations,
   });

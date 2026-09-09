@@ -88,10 +88,12 @@ export function mergeRegistrations(serverRegs = []) {
     const key = r.participantId ? r.participantId.toUpperCase() : `${r.email?.toLowerCase()}_${r.eventId}`;
     if (map.has(key)) {
       const serverItem = map.get(key);
+      const finalAttendance = serverItem.attendance === 'Present' ? 'Present' : (r.attendance === 'Present' ? 'Present' : (serverItem.attendance || r.attendance || 'Pending'));
       map.set(key, {
         ...serverItem,
         ...r,
-        attendance: r.attendance === 'Present' ? 'Present' : serverItem.attendance || r.attendance,
+        attendance: finalAttendance,
+        checkInTime: serverItem.checkInTime || r.checkInTime,
       });
     } else {
       map.set(key, r);

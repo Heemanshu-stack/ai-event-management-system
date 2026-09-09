@@ -1,9 +1,12 @@
 import { NextResponse } from 'next/server';
 import { getEvents, addEvent, getRegistrations } from '@/lib/db';
+import { fetchLiveSheetRegistrations } from '@/lib/googleSheets';
 
 export async function GET() {
   const events = getEvents();
-  const registrations = getRegistrations();
+  const liveSheetRegs = await fetchLiveSheetRegistrations();
+  const fallbackRegs = getRegistrations();
+  const registrations = (liveSheetRegs && liveSheetRegs.length > 0) ? liveSheetRegs : (liveSheetRegs || fallbackRegs);
   return NextResponse.json({ events, registrations });
 }
 
