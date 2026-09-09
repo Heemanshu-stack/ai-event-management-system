@@ -22,16 +22,17 @@ export default function StudentPortalPage() {
   const loadPortalData = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/auth/me');
-      if (res.ok) {
-        const data = await res.json();
-        setUser(data.user);
-        const userEmail = data.user?.email?.toLowerCase();
-        const merged = mergeRegistrations(data.registrations || []);
-        const filtered = userEmail ? merged.filter(r => r.email?.toLowerCase() === userEmail) : merged;
-        setRegistrations(filtered.length > 0 ? filtered : merged);
+      const [authRes, eventsRes] = await Promise.allSettled([
+        fetch('/api/auth/me'),
+        fetch('/api/events'),
+      ]);
+
+      let userData = null;
+      if (authRes.status === 'fulfilled' && authRes.value.ok) {
+        const d = await authRes.value.json();
+        userData = d.user;
+        setUser(d.user);
       } else {
-        // Even if session is not active, fallback to local registrations
         const localRegs = getLocalRegistrations();
         if (localRegs.length > 0) {
           setRegistrations(localRegs);
@@ -40,6 +41,29 @@ export default function StudentPortalPage() {
           return;
         }
       }
+
+      let allServerRegs = [];
+      if (eventsRes.status === 'fulfilled' && eventsRes.value.ok) {
+        const ed = await eventsRes.value.json();
+        allServerRegs = ed.registrations || [];
+      }
+
+      const userEmail = userData?.email?.toLowerCase() || '';
+      const userName = (userData?.fullName || userData?.username || '').toLowerCase();
+
+      // Merge live server sheet registrations with local storage
+      const merged = mergeRegistrations(allServerRegs);
+
+      // Match passes by email, student name, or display active registrations
+      const userRegs = merged.filter((r) => {
+        const rEmail = (r.email || '').toLowerCase();
+        const rName = (r.fullName || '').toLowerCase();
+        if (userEmail && rEmail === userEmail) return true;
+        if (userName && (rName.includes(userName) || userName.includes(rName))) return true;
+        return false;
+      });
+
+      setRegistrations(userRegs.length > 0 ? userRegs : merged);
     } catch (err) {
       console.error('Error loading portal:', err);
       setRegistrations(getLocalRegistrations());
