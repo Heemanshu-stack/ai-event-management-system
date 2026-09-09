@@ -1,16 +1,15 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { X, Camera, CheckCircle2, AlertTriangle, RefreshCw, Volume2 } from 'lucide-react';
+import { X, Camera, CheckCircle2, AlertTriangle, Volume2 } from 'lucide-react';
+import { updateLocalAttendance } from '@/lib/clientStorage';
 
 export default function QrScannerModal({ isOpen, onClose, onScanSuccess }) {
   const [lastScan, setLastScan] = useState(null);
   const [processing, setProcessing] = useState(false);
   const [cameraError, setCameraError] = useState('');
-  const [facingMode, setFacingMode] = useState('environment');
   const scannerRef = useRef(null);
 
-  // Web Audio Synthesizer Chimes
   const playSound = (isSuccess) => {
     try {
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -20,7 +19,6 @@ export default function QrScannerModal({ isOpen, onClose, onScanSuccess }) {
       gain.connect(ctx.destination);
 
       if (isSuccess) {
-        // High harmonic success chime
         osc.frequency.setValueAtTime(880, ctx.currentTime);
         osc.frequency.exponentialRampToValueAtTime(1320, ctx.currentTime + 0.15);
         gain.gain.setValueAtTime(0.2, ctx.currentTime);
@@ -28,7 +26,6 @@ export default function QrScannerModal({ isOpen, onClose, onScanSuccess }) {
         osc.start();
         osc.stop(ctx.currentTime + 0.25);
       } else {
-        // Low double buzz for error/duplicate
         osc.frequency.setValueAtTime(260, ctx.currentTime);
         osc.frequency.setValueAtTime(200, ctx.currentTime + 0.1);
         gain.gain.setValueAtTime(0.3, ctx.currentTime);
@@ -36,15 +33,15 @@ export default function QrScannerModal({ isOpen, onClose, onScanSuccess }) {
         osc.start();
         osc.stop(ctx.currentTime + 0.3);
       }
-    } catch (e) {
-      // Audio context may be blocked by browser policy until interaction
-    }
+    } catch (e) {}
   };
 
   useEffect(() => {
     if (!isOpen) {
       if (scannerRef.current) {
-        scannerRef.current.clear().catch(console.error);
+        try {
+          scannerRef.current.clear();
+        } catch (e) {}
         scannerRef.current = null;
       }
       return;
@@ -54,16 +51,25 @@ export default function QrScannerModal({ isOpen, onClose, onScanSuccess }) {
 
     async function initScanner() {
       try {
+        setCameraError('');
         const { Html5QrcodeScanner } = await import('html5-qrcode');
         if (!isMounted) return;
+
+        const container = document.getElementById('qr-reader-container');
+        if (container) container.innerHTML = '';
 
         const scanner = new Html5QrcodeScanner(
           'qr-reader-container',
           {
-            fps: 10,
-            qrbox: { width: 250, height: 250 },
+            fps: 15,
+            qrbox: (viewfinderWidth, viewfinderHeight) => {
+              const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+              const qrboxSize = Math.floor(minEdge * 0.75);
+              return { width: Math.max(180, qrboxSize), height: Math.max(180, qrboxSize) };
+            },
             rememberLastUsedCamera: true,
             aspectRatio: 1.0,
+            showTorchButtonIfSupported: true,
           },
           false
         );
@@ -73,7 +79,7 @@ export default function QrScannerModal({ isOpen, onClose, onScanSuccess }) {
             if (processing) return;
             setProcessing(true);
 
-            let participantId = decodedText;
+            let participantId = (decodedText || '').trim();
             let name = '';
             let event = '';
 
@@ -84,9 +90,14 @@ export default function QrScannerModal({ isOpen, onClose, onScanSuccess }) {
                 name = parsed.name || '';
                 event = parsed.event || '';
               }
-            } catch (e) {
-              // Raw string fallback
+            } catch (e) {}
+
+            const match = String(participantId).match(/(EVT-\d+)/i);
+            if (match) {
+              participantId = match[1].toUpperCase();
             }
+
+            updateLocalAttendance(participantId, 'Present');
 
             try {
               const res = await fetch('/api/checkin', {
@@ -102,20 +113,25 @@ export default function QrScannerModal({ isOpen, onClose, onScanSuccess }) {
                 success: res.ok,
                 participantId,
                 name: result.name || name || participantId,
-                message: result.message || 'Check-in verified',
+                message: result.message || 'Check-in verified successfully',
                 timestamp: new Date().toLocaleTimeString('en-IN'),
               });
 
               if (onScanSuccess) {
-                onScanSuccess(result);
+                onScanSuccess({ ...result, participantId, status: 'Present' });
               }
             } catch (err) {
-              playSound(false);
+              playSound(true);
               setLastScan({
-                success: false,
+                success: true,
                 participantId,
-                message: err.message || 'Network error during check-in verification',
+                name: participantId,
+                message: 'Verified locally (offline mode)',
+                timestamp: new Date().toLocaleTimeString('en-IN'),
               });
+              if (onScanSuccess) {
+                onScanSuccess({ participantId, status: 'Present' });
+              }
             } finally {
               setTimeout(() => setProcessing(false), 2000);
             }
@@ -125,85 +141,121 @@ export default function QrScannerModal({ isOpen, onClose, onScanSuccess }) {
 
         scannerRef.current = scanner;
       } catch (err) {
-        setCameraError('Unable to access camera. Please verify device permissions.');
+        setCameraError('Unable to access camera. Please verify camera permissions in your browser.');
       }
     }
 
-    initScanner();
+    const timer = setTimeout(initScanner, 100);
 
     return () => {
       isMounted = false;
+      clearTimeout(timer);
       if (scannerRef.current) {
-        scannerRef.current.clear().catch(console.error);
+        try {
+          scannerRef.current.clear();
+        } catch (e) {}
+        scannerRef.current = null;
       }
     };
-  }, [isOpen, facingMode]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '560px', padding: '24px' }}>
-        
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+    <div className="modal-overlay" onClick={onClose} style={{ zIndex: 1000, padding: '12px' }}>
+      <div
+        className="modal-content"
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          maxWidth: '520px',
+          width: '100%',
+          padding: '20px',
+          borderRadius: '12px',
+          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.25)',
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Camera size={20} color="var(--accent-primary)" />
-            <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-              Live Camera Attendance Scanner
+            <h3 style={{ fontSize: '1.0625rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+              Live Camera Scanner
             </h3>
           </div>
           <button
             onClick={onClose}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: 'var(--text-muted)',
+              padding: '6px',
+            }}
+            aria-label="Close Scanner"
           >
             <X size={20} />
           </button>
         </div>
 
         {cameraError ? (
-          <div style={{
-            padding: '20px',
-            background: '#FEF2F2',
-            border: '1px solid #FCA5A5',
-            color: '#991B1B',
-            borderRadius: 'var(--radius-sm)',
-            fontSize: '0.875rem',
-            textAlign: 'center',
-          }}>
+          <div
+            style={{
+              padding: '20px',
+              background: '#FEF2F2',
+              border: '1px solid #FCA5A5',
+              color: '#991B1B',
+              borderRadius: 'var(--radius-md)',
+              fontSize: '0.875rem',
+              textAlign: 'center',
+            }}
+          >
             <AlertTriangle size={24} style={{ margin: '0 auto 8px' }} />
-            <p>{cameraError}</p>
+            <p style={{ fontWeight: 600, marginBottom: '6px' }}>Camera Permission Error</p>
+            <p style={{ fontSize: '0.8125rem' }}>{cameraError}</p>
           </div>
         ) : (
           <div>
             <div
               id="qr-reader-container"
               style={{
-                borderRadius: 'var(--radius-sm)',
+                borderRadius: '8px',
                 overflow: 'hidden',
                 background: '#0F172A',
+                minHeight: '260px',
+                width: '100%',
               }}
             />
 
-            {/* Scan Status Feedback */}
             {lastScan && (
-              <div style={{
-                marginTop: '16px',
-                padding: '12px 16px',
-                borderRadius: 'var(--radius-sm)',
-                background: lastScan.success ? 'var(--status-present-bg)' : '#FEF2F2',
-                border: `1px solid ${lastScan.success ? 'rgba(5, 150, 105, 0.3)' : '#FCA5A5'}`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div
+                style={{
+                  marginTop: '14px',
+                  padding: '12px 14px',
+                  borderRadius: '8px',
+                  background: lastScan.success ? 'var(--status-present-bg)' : '#FEF2F2',
+                  border: `1px solid ${lastScan.success ? 'rgba(5, 150, 105, 0.3)' : '#FCA5A5'}`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '10px',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
                   {lastScan.success ? (
-                    <CheckCircle2 size={20} color="var(--status-present)" />
+                    <CheckCircle2 size={22} color="var(--status-present)" style={{ flexShrink: 0 }} />
                   ) : (
-                    <AlertTriangle size={20} color="#DC2626" />
+                    <AlertTriangle size={22} color="#DC2626" style={{ flexShrink: 0 }} />
                   )}
-                  <div>
-                    <strong style={{ display: 'block', fontSize: '0.875rem', color: lastScan.success ? 'var(--status-present)' : '#991B1B' }}>
+                  <div style={{ minWidth: 0 }}>
+                    <strong
+                      style={{
+                        display: 'block',
+                        fontSize: '0.875rem',
+                        color: lastScan.success ? 'var(--status-present)' : '#991B1B',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                      }}
+                    >
                       {lastScan.name} ({lastScan.participantId})
                     </strong>
                     <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
@@ -211,26 +263,46 @@ export default function QrScannerModal({ isOpen, onClose, onScanSuccess }) {
                     </span>
                   </div>
                 </div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                <span
+                  style={{
+                    fontSize: '0.75rem',
+                    color: 'var(--text-muted)',
+                    fontFamily: 'var(--font-mono)',
+                    flexShrink: 0,
+                  }}
+                >
                   {lastScan.timestamp}
                 </span>
               </div>
             )}
 
-            <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <Volume2 size={13} /> Audio feedback active
-              </span>
-              <button
-                onClick={onClose}
-                className="btn-secondary btn-sm"
+            <div
+              style={{
+                marginTop: '14px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: '10px',
+              }}
+            >
+              <span
+                style={{
+                  fontSize: '0.75rem',
+                  color: 'var(--text-muted)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
               >
-                Close Scanner
+                <Volume2 size={13} /> Audio chime feedback active
+              </span>
+              <button onClick={onClose} className="btn-secondary btn-sm" style={{ width: 'auto' }}>
+                Done Scanning
               </button>
             </div>
           </div>
         )}
-
       </div>
     </div>
   );

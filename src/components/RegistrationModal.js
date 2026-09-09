@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { X, CheckCircle2, QrCode, AlertCircle, Loader2 } from 'lucide-react';
+import { saveLocalRegistration } from '@/lib/clientStorage';
 
 export default function RegistrationModal({ event, isOpen, onClose, onSuccess }) {
   const [formData, setFormData] = useState({
@@ -36,6 +37,23 @@ export default function RegistrationModal({ event, isOpen, onClose, onSuccess })
       if (!res.ok) {
         throw new Error(data.error || 'Failed to complete registration');
       }
+
+      // Persist in client storage immediately
+      saveLocalRegistration({
+        participantId: data.participantId,
+        teamId: data.teamId,
+        eventId: event.id,
+        eventName: event.name,
+        fullName: formData.fullName,
+        email: formData.email,
+        phone: formData.phone,
+        college: formData.college,
+        registrationTime: new Date().toISOString(),
+        attendance: 'Pending',
+        checkInTime: null,
+        certificateSent: 'No',
+        qrCodeLink: data.qrCodeUrl || `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(data.participantId || '')}`,
+      });
 
       setResult(data);
       if (onSuccess) onSuccess(data);

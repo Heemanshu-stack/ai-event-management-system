@@ -265,14 +265,7 @@ export default function HomePage() {
           </div>
 
           {/* Category Filter Tabs with Count Badges */}
-          <div style={{
-            display: 'flex',
-            gap: '8px',
-            flexWrap: 'wrap',
-            borderBottom: '1px solid var(--border-subtle)',
-            paddingBottom: '12px',
-            marginBottom: '28px',
-          }}>
+          <div className="filter-tabs">
             {CATEGORY_TABS.map((tab) => {
               const count = getCategoryCount(tab.key);
               const isActive = activeCategory === tab.key;

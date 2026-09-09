@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Shield, Plus, Sparkles, Award, BarChart3, CheckCircle2, Loader2, AlertCircle, Calendar, Users, Eye, Activity, Star, ThumbsUp, TrendingUp, RefreshCw } from 'lucide-react';
 import StatusBadge from '@/components/StatusBadge';
+import { mergeRegistrations, getLocalRegistrations } from '@/lib/clientStorage';
 
 export default function AdminPage() {
   const [passkey, setPasskey] = useState('');
@@ -63,11 +64,13 @@ export default function AdminPage() {
   const fetchAdminData = async () => {
     try {
       const res = await fetch('/api/events');
-      const data = await res.json();
+      const data = res.ok ? await res.json() : { events: [], registrations: [] };
       setEvents(data.events || []);
-      setParticipants(data.registrations || []);
+      const merged = mergeRegistrations(data.registrations || []);
+      setParticipants(merged);
     } catch (err) {
       console.error('Error loading admin data:', err);
+      setParticipants(getLocalRegistrations());
     } finally {
       setLoading(false);
     }

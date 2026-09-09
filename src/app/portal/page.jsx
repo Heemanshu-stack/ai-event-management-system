@@ -6,6 +6,7 @@ import { User, QrCode, Award, CheckCircle2, Clock, Download, ExternalLink, Calen
 import StatusBadge from '@/components/StatusBadge';
 import QrCodeBadge from '@/components/QrCodeBadge';
 import FeedbackModal from '@/components/FeedbackModal';
+import { mergeRegistrations, getLocalRegistrations } from '@/lib/clientStorage';
 
 export default function StudentPortalPage() {
   const [user, setUser] = useState(null);
@@ -25,13 +26,23 @@ export default function StudentPortalPage() {
       if (res.ok) {
         const data = await res.json();
         setUser(data.user);
-        setRegistrations(data.registrations || []);
+        const userEmail = data.user?.email?.toLowerCase();
+        const merged = mergeRegistrations(data.registrations || []);
+        const filtered = userEmail ? merged.filter(r => r.email?.toLowerCase() === userEmail) : merged;
+        setRegistrations(filtered.length > 0 ? filtered : merged);
       } else {
-        window.location.href = '/login';
-        return;
+        // Even if session is not active, fallback to local registrations
+        const localRegs = getLocalRegistrations();
+        if (localRegs.length > 0) {
+          setRegistrations(localRegs);
+        } else {
+          window.location.href = '/login';
+          return;
+        }
       }
     } catch (err) {
       console.error('Error loading portal:', err);
+      setRegistrations(getLocalRegistrations());
     } finally {
       setLoading(false);
     }
@@ -54,8 +65,8 @@ export default function StudentPortalPage() {
 
     try {
       const res = await fetch('/api/events');
-      const data = await res.json();
-      const allRegs = data.registrations || [];
+      const data = res.ok ? await res.json() : { registrations: [] };
+      const allRegs = mergeRegistrations(data.registrations || []);
       const query = lookupQuery.trim().toLowerCase();
 
       const found = allRegs.find(
@@ -71,7 +82,19 @@ export default function StudentPortalPage() {
         setLookupError(`No registration pass found matching "${lookupQuery}". Please check your Participant ID or email.`);
       }
     } catch (err) {
-      setLookupError('Failed to search registrations.');
+      const allRegs = getLocalRegistrations();
+      const query = lookupQuery.trim().toLowerCase();
+      const found = allRegs.find(
+        (r) =>
+          r.participantId?.toLowerCase() === query ||
+          r.email?.toLowerCase() === query ||
+          r.teamId?.toLowerCase() === query
+      );
+      if (found) {
+        setLookupResult(found);
+      } else {
+        setLookupError('Failed to search registrations.');
+      }
     }
   };
 

@@ -313,9 +313,67 @@ button, input, select, textarea {
   gap: 24px;
 }
 
+/* Table responsive wrapper */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 @media (max-width: 768px) {
+  .container {
+    padding: 0 16px;
+  }
+
   .grid-2, .grid-3 {
     grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  /* Desktop vs Mobile Navigation */
+  .desktop-nav {
+    display: none !important;
+  }
+
+  .mobile-menu-btn {
+    display: flex !important;
+  }
+
+  /* Responsive Modals */
+  .modal-overlay {
+    padding: 8px;
+    align-items: flex-end;
+  }
+
+  .modal-content {
+    max-height: 88vh;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    width: 100%;
+  }
+
+  /* Filter tabs horizontal scroll on phones */
+  .filter-tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 8px;
+    margin-bottom: 16px;
+  }
+
+  .filter-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .filter-tab-btn {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  /* Touch-friendly buttons on mobile */
+  .btn-primary, .btn-secondary, .btn-accent {
+    min-height: 44px;
   }
 }
 
@@ -324,4 +382,5 @@ body:has(.login-page-container) header,
 body:has(.login-page-container) footer {
   display: none !important;
 }
+
 
