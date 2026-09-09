@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Camera, QrCode, CheckCircle2, Award, Search, Users, ShieldCheck, Send, Loader2, AlertCircle, Download, Volume2 } from 'lucide-react';
 import StatusBadge from '@/components/StatusBadge';
 import QrScannerModal from '@/components/QrScannerModal';
+import CertificateModal from '@/components/CertificateModal';
 import { mergeRegistrations, updateLocalAttendance, getLocalRegistrations, clearLocalRegistrations } from '@/lib/clientStorage';
 
 export default function StaffPortalPage() {
@@ -21,6 +22,7 @@ export default function StaffPortalPage() {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [certLoading, setCertLoading] = useState(false);
   const [certStatus, setCertStatus] = useState(null);
+  const [activeCertificateParticipant, setActiveCertificateParticipant] = useState(null);
 
   useEffect(() => {
     const saved = sessionStorage.getItem('staff_auth');
@@ -472,15 +474,24 @@ export default function StaffPortalPage() {
                         {p.checkInTime ? new Date(p.checkInTime).toLocaleTimeString('en-IN') : '–'}
                       </td>
                       <td>
-                        {p.certificateSent === 'yes' ? (
-                          <span style={{ color: 'var(--status-present)', fontSize: '0.75rem', fontWeight: 600 }}>
-                            Dispatched
-                          </span>
-                        ) : (
-                          <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
-                            Pending
-                          </span>
-                        )}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          {(p.attendance || '').toLowerCase() === 'present' || p.certificateSent === 'yes' ? (
+                            <button
+                              type="button"
+                              onClick={() => setActiveCertificateParticipant(p)}
+                              className="btn-accent btn-sm"
+                              style={{ padding: '2px 8px', fontSize: '0.75rem', gap: '4px' }}
+                              title="View and Download Certificate"
+                            >
+                              <Award size={12} />
+                              {p.certificateSent === 'yes' ? 'Dispatched (View)' : 'Ready (View)'}
+                            </button>
+                          ) : (
+                            <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+                              Pending check-in
+                            </span>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -499,6 +510,13 @@ export default function StaffPortalPage() {
         onScanSuccess={() => {
           fetchRoster();
         }}
+      />
+
+      {/* Official Certificate Preview & Download Modal */}
+      <CertificateModal
+        participant={activeCertificateParticipant}
+        isOpen={Boolean(activeCertificateParticipant)}
+        onClose={() => setActiveCertificateParticipant(null)}
       />
     </div>
   );

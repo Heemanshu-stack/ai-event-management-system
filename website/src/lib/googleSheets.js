@@ -70,6 +70,7 @@ export async function fetchLiveSheetRegistrations() {
     const certIdx = headers.findIndex((h) => h.includes('certificate sent') || h.includes('certificate'));
     const checkInIdx = headers.findIndex((h) => h.includes('check-in time') || h.includes('check in'));
     const teamIdx = headers.findIndex((h) => h.includes('teamid') || h.includes('team id'));
+    const certUrlIdx = headers.findIndex((h) => h.includes('certificateurl') || h.includes('certificate url'));
 
     const registrations = [];
 
@@ -98,6 +99,7 @@ export async function fetchLiveSheetRegistrations() {
         qrCodeLink: qrIdx >= 0 && cols[qrIdx] ? cols[qrIdx].trim() : '',
         attendance,
         certificateSent: certIdx >= 0 && cols[certIdx] && /yes/i.test(cols[certIdx]) ? 'yes' : 'No',
+        certificateUrl: certUrlIdx >= 0 && cols[certUrlIdx] ? cols[certUrlIdx].trim() : '',
         checkInTime: checkInIdx >= 0 && cols[checkInIdx] ? cols[checkInIdx].trim() : null,
         teamId: teamIdx >= 0 && cols[teamIdx] ? cols[teamIdx].trim() : `TEAM-${participantId.replace(/\D/g, '') || '1001'}`,
       });

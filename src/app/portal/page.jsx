@@ -6,6 +6,7 @@ import { User, QrCode, Award, CheckCircle2, Clock, Download, ExternalLink, Calen
 import StatusBadge from '@/components/StatusBadge';
 import QrCodeBadge from '@/components/QrCodeBadge';
 import FeedbackModal from '@/components/FeedbackModal';
+import CertificateModal from '@/components/CertificateModal';
 import { mergeRegistrations, getLocalRegistrations } from '@/lib/clientStorage';
 
 export default function StudentPortalPage() {
@@ -18,6 +19,7 @@ export default function StudentPortalPage() {
 
   const [activeQrParticipant, setActiveQrParticipant] = useState(null);
   const [activeFeedbackParticipant, setActiveFeedbackParticipant] = useState(null);
+  const [activeCertificateParticipant, setActiveCertificateParticipant] = useState(null);
 
   const loadPortalData = async () => {
     setLoading(true);
@@ -365,13 +367,19 @@ export default function StudentPortalPage() {
                       Certificate & Review
                     </span>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                      {reg.certificateSent === 'yes' ? (
-                        <span style={{ fontSize: '0.8125rem', color: 'var(--status-present)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <CheckCircle2 size={14} /> Certificate Dispatched
-                        </span>
+                      {(reg.attendance || '').toLowerCase() === 'present' || reg.certificateSent === 'yes' ? (
+                        <button
+                          type="button"
+                          onClick={() => setActiveCertificateParticipant(reg)}
+                          className="btn-accent btn-sm"
+                          style={{ gap: '6px', width: '100%', justifyContent: 'center' }}
+                        >
+                          <Award size={14} />
+                          View Certificate
+                        </button>
                       ) : (
                         <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
-                          Issued upon event check-in
+                          Unlocked upon check-in
                         </span>
                       )}
 
@@ -400,6 +408,13 @@ export default function StudentPortalPage() {
         participant={activeQrParticipant}
         isOpen={Boolean(activeQrParticipant)}
         onClose={() => setActiveQrParticipant(null)}
+      />
+
+      {/* Official Certificate Modal */}
+      <CertificateModal
+        participant={activeCertificateParticipant}
+        isOpen={Boolean(activeCertificateParticipant)}
+        onClose={() => setActiveCertificateParticipant(null)}
       />
 
       {/* In-Portal AI Feedback Review Modal */}
