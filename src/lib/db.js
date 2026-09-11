@@ -62,15 +62,20 @@ let eventsStore = [
 let usersStore = [];
 
 let registrationsStore = [];
-let lastResetTimestamp = null;
+let clearedIdsSet = new Set();
 
-export function getResetTimestamp() {
-  return lastResetTimestamp;
+export function getClearedIds() {
+  return Array.from(clearedIdsSet);
 }
 
-export function setResetTimestamp(ts) {
-  lastResetTimestamp = ts ? new Date(ts).getTime() : Date.now();
-  return lastResetTimestamp;
+export function addClearedIds(ids = []) {
+  ids.forEach((id) => {
+    if (id) clearedIdsSet.add(String(id).toUpperCase().trim());
+  });
+}
+
+export function unblockServerParticipantId(id) {
+  if (id) clearedIdsSet.delete(String(id).toUpperCase().trim());
 }
 
 export function getEvents() {
@@ -107,13 +112,10 @@ export function addUser(user) {
 }
 
 export function getRegistrations() {
-  if (lastResetTimestamp) {
-    return registrationsStore.filter(r => {
-      if (!r.registrationTime) return false;
-      return new Date(r.registrationTime).getTime() > lastResetTimestamp;
-    });
-  }
-  return registrationsStore;
+  return registrationsStore.filter((r) => {
+    const id = r.participantId ? String(r.participantId).toUpperCase().trim() : '';
+    return !id || !clearedIdsSet.has(id);
+  });
 }
 
 export function getRegistrationsByEmail(email) {
@@ -125,6 +127,9 @@ export function getParticipantById(participantId) {
 }
 
 export function addRegistration(reg) {
+  if (reg.participantId) {
+    unblockServerParticipantId(reg.participantId);
+  }
   const existing = registrationsStore.find(r => r.email === reg.email && r.eventId === reg.eventId);
   if (existing) {
     Object.assign(existing, reg);
@@ -135,6 +140,9 @@ export function addRegistration(reg) {
 }
 
 export function updateParticipantAttendance(participantId, status = 'Present') {
+  if (participantId) {
+    unblockServerParticipantId(participantId);
+  }
   const participant = registrationsStore.find(r => r.participantId === participantId);
   if (participant) {
     participant.attendance = status;
@@ -153,9 +161,11 @@ export function updateParticipantCertificate(participantId, status = 'yes') {
   return null;
 }
 
-export function clearRegistrations(timestamp = null) {
+export function clearRegistrations(idsToClear = []) {
+  registrationsStore.forEach((r) => {
+    if (r.participantId) clearedIdsSet.add(String(r.participantId).toUpperCase().trim());
+  });
+  addClearedIds(idsToClear);
   registrationsStore = [];
-  lastResetTimestamp = timestamp ? new Date(timestamp).getTime() : Date.now();
   return true;
 }
-

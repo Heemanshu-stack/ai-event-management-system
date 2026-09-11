@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server';
-import { getEvents, addEvent, getRegistrations, getResetTimestamp } from '@/lib/db';
+import { getEvents, addEvent, getRegistrations, getClearedIds } from '@/lib/db';
 import { fetchLiveSheetRegistrations } from '@/lib/googleSheets';
 
 export async function GET() {
   const events = getEvents();
-  const resetCutoff = getResetTimestamp();
-  const liveSheetRegs = await fetchLiveSheetRegistrations(resetCutoff);
+  const clearedIds = getClearedIds();
+  const liveSheetRegs = await fetchLiveSheetRegistrations(clearedIds);
   const fallbackRegs = getRegistrations();
   const registrations = liveSheetRegs !== null ? liveSheetRegs : fallbackRegs;
-  return NextResponse.json({ events, registrations, resetTimestamp: resetCutoff });
+  return NextResponse.json({ events, registrations, clearedIds });
 }
 
 export async function POST(req) {

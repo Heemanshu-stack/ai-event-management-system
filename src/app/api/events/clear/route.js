@@ -1,21 +1,21 @@
 import { NextResponse } from 'next/server';
-import { clearRegistrations } from '@/lib/db';
+import { clearRegistrations, getClearedIds } from '@/lib/db';
 
 export async function POST(req) {
   try {
-    let timestamp = new Date().toISOString();
+    let idsToClear = [];
     try {
       const body = await req.json();
-      if (body?.timestamp) {
-        timestamp = body.timestamp;
+      if (Array.isArray(body?.clearedIds)) {
+        idsToClear = body.clearedIds;
       }
     } catch (e) {}
 
-    clearRegistrations(timestamp);
+    clearRegistrations(idsToClear);
 
     return NextResponse.json({
       success: true,
-      timestamp,
+      clearedIds: getClearedIds(),
       message: 'All registrations successfully reset across the platform.',
     });
   } catch (error) {

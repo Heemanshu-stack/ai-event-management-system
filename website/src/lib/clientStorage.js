@@ -2,25 +2,37 @@
 // Ensures registrations and check-ins persist across Vercel serverless cold starts and browser reloads
 
 const STORAGE_KEY = 'eventpilot_registrations_v1';
-const CLEARED_AT_KEY = 'eventpilot_cleared_at';
+const CLEARED_IDS_KEY = 'eventpilot_cleared_ids_v1';
 
-export function getLocalResetTimestamp() {
-  if (typeof window === 'undefined') return null;
+export function getClearedParticipantIds() {
+  if (typeof window === 'undefined') return [];
   try {
-    const raw = localStorage.getItem(CLEARED_AT_KEY);
-    if (!raw) return null;
-    const ms = new Date(raw).getTime();
-    return isNaN(ms) ? null : ms;
+    const raw = localStorage.getItem(CLEARED_IDS_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.map((id) => String(id).toUpperCase().trim()) : [];
   } catch (e) {
-    return null;
+    return [];
   }
 }
 
-export function setLocalResetTimestamp(ts) {
+export function addClearedParticipantIds(ids = []) {
   if (typeof window === 'undefined') return;
   try {
-    const iso = ts ? new Date(ts).toISOString() : new Date().toISOString();
-    localStorage.setItem(CLEARED_AT_KEY, iso);
+    const existing = new Set(getClearedParticipantIds());
+    ids.forEach((id) => {
+      if (id) existing.add(String(id).toUpperCase().trim());
+    });
+    localStorage.setItem(CLEARED_IDS_KEY, JSON.stringify(Array.from(existing)));
+  } catch (e) {}
+}
+
+export function unblockParticipantId(id) {
+  if (typeof window === 'undefined' || !id) return;
+  try {
+    const clean = String(id).toUpperCase().trim();
+    const existing = getClearedParticipantIds().filter((x) => x !== clean);
+    localStorage.setItem(CLEARED_IDS_KEY, JSON.stringify(existing));
   } catch (e) {}
 }
 
@@ -32,12 +44,11 @@ export function getLocalRegistrations() {
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
 
-    const clearedAt = getLocalResetTimestamp();
-    if (clearedAt) {
+    const clearedIds = new Set(getClearedParticipantIds());
+    if (clearedIds.size > 0) {
       return parsed.filter((r) => {
-        if (!r.registrationTime) return false;
-        const t = new Date(r.registrationTime).getTime();
-        return !isNaN(t) && t > clearedAt;
+        const id = r.participantId ? String(r.participantId).toUpperCase().trim() : '';
+        return !id || !clearedIds.has(id);
       });
     }
     return parsed;
@@ -50,6 +61,10 @@ export function getLocalRegistrations() {
 export function saveLocalRegistration(newReg) {
   if (typeof window === 'undefined' || !newReg) return;
   try {
+    if (newReg.participantId) {
+      unblockParticipantId(newReg.participantId);
+    }
+
     const existing = getLocalRegistrations();
     // Check if participantId or email+eventId already exists
     const idx = existing.findIndex(
@@ -74,6 +89,8 @@ export function updateLocalAttendance(participantId, status = 'Present') {
   if (typeof window === 'undefined' || !participantId) return null;
   try {
     const cleanId = String(participantId).trim().toUpperCase();
+    unblockParticipantId(cleanId);
+
     const existing = getLocalRegistrations();
     const item = existing.find(
       (r) => r.participantId?.toUpperCase() === cleanId
@@ -111,13 +128,11 @@ export function updateLocalAttendance(participantId, status = 'Present') {
 
 export function mergeRegistrations(serverRegs = []) {
   const localRegs = getLocalRegistrations();
-  const clearedAt = getLocalResetTimestamp();
+  const clearedIds = new Set(getClearedParticipantIds());
 
   const filteredServerRegs = (serverRegs || []).filter((r) => {
-    if (!clearedAt) return true;
-    if (!r.registrationTime) return false;
-    const t = new Date(r.registrationTime).getTime();
-    return !isNaN(t) && t > clearedAt;
+    const id = r.participantId ? String(r.participantId).toUpperCase().trim() : '';
+    return !id || !clearedIds.has(id);
   });
 
   const map = new Map();
@@ -125,7 +140,7 @@ export function mergeRegistrations(serverRegs = []) {
   // Add server items first
   for (const r of filteredServerRegs) {
     if (r.participantId) {
-      map.set(r.participantId.toUpperCase(), r);
+      map.set(r.participantId.toUpperCase().trim(), r);
     } else if (r.email && r.eventId) {
       map.set(`${r.email.toLowerCase()}_${r.eventId}`, r);
     }
@@ -133,7 +148,7 @@ export function mergeRegistrations(serverRegs = []) {
 
   // Merge or prepend local items
   for (const r of localRegs) {
-    const key = r.participantId ? r.participantId.toUpperCase() : `${r.email?.toLowerCase()}_${r.eventId}`;
+    const key = r.participantId ? r.participantId.toUpperCase().trim() : `${r.email?.toLowerCase()}_${r.eventId}`;
     if (map.has(key)) {
       const serverItem = map.get(key);
       // Server 'Present' status takes precedence across devices
@@ -149,14 +164,22 @@ export function mergeRegistrations(serverRegs = []) {
     }
   }
 
-  return Array.from(map.values());
+  return Array.from(map.values()).filter((r) => {
+    const id = r.participantId ? String(r.participantId).toUpperCase().trim() : '';
+    return !id || !clearedIds.has(id);
+  });
 }
 
-export function clearLocalRegistrations() {
+export function clearLocalRegistrations(idsToClear = []) {
   if (typeof window === 'undefined') return;
   try {
-    const nowIso = new Date().toISOString();
-    localStorage.setItem(CLEARED_AT_KEY, nowIso);
+    const current = getLocalRegistrations();
+    const allIds = new Set(idsToClear);
+    current.forEach((r) => {
+      if (r.participantId) allIds.add(r.participantId);
+    });
+
+    addClearedParticipantIds(Array.from(allIds));
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem('eventpilot_registrations');
   } catch (e) {

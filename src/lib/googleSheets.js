@@ -41,7 +41,7 @@ function parseFullCSV(text) {
   return rows;
 }
 
-export async function fetchLiveSheetRegistrations(resetCutoffTimestamp = null) {
+export async function fetchLiveSheetRegistrations(clearedIds = []) {
   try {
     const res = await fetch(CSV_URL, {
       next: { revalidate: 0 },
@@ -74,6 +74,8 @@ export async function fetchLiveSheetRegistrations(resetCutoffTimestamp = null) {
     const teamIdx = headers.findIndex((h) => h.includes('teamid') || h.includes('team id'));
     const certUrlIdx = headers.findIndex((h) => h.includes('certificateurl') || h.includes('certificate url'));
 
+    const clearedSet = new Set((clearedIds || []).map((id) => String(id).toUpperCase().trim()));
+
     const registrations = [];
 
     for (let i = 1; i < rows.length; i++) {
@@ -88,13 +90,9 @@ export async function fetchLiveSheetRegistrations(resetCutoffTimestamp = null) {
 
       if (!participantId) continue;
 
-      const regTimeRaw = timeIdx >= 0 && cols[timeIdx] ? cols[timeIdx].trim() : '';
-      if (resetCutoffTimestamp) {
-        if (!regTimeRaw) continue;
-        const regTimeMs = new Date(regTimeRaw).getTime();
-        if (isNaN(regTimeMs) || regTimeMs <= resetCutoffTimestamp) {
-          continue;
-        }
+      // Filter out cleared participant IDs
+      if (clearedSet.has(participantId)) {
+        continue;
       }
 
       const rawAtt = attIdx >= 0 && cols[attIdx] ? cols[attIdx].trim() : 'Pending';
@@ -107,7 +105,7 @@ export async function fetchLiveSheetRegistrations(resetCutoffTimestamp = null) {
         phone: phoneIdx >= 0 && cols[phoneIdx] ? cols[phoneIdx].trim() : '',
         college: collegeIdx >= 0 && cols[collegeIdx] ? cols[collegeIdx].trim() : '',
         eventName: eventIdx >= 0 && cols[eventIdx] ? cols[eventIdx].trim() : 'AI Innovation Hackathon',
-        registrationTime: regTimeRaw,
+        registrationTime: timeIdx >= 0 && cols[timeIdx] ? cols[timeIdx].trim() : '',
         qrCodeLink: qrIdx >= 0 && cols[qrIdx] ? cols[qrIdx].trim() : '',
         attendance,
         certificateSent: certIdx >= 0 && cols[certIdx] && /yes/i.test(cols[certIdx]) ? 'yes' : 'No',

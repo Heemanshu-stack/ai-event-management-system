@@ -78,14 +78,14 @@ export default function AdminPage() {
 
   const handleClearAllRegistrations = async () => {
     if (!confirm('Are you sure you want to reset all registrations across the platform?')) return;
-    const nowIso = new Date().toISOString();
-    clearLocalRegistrations();
+    const currentIds = participants.map((p) => p.participantId).filter(Boolean);
+    clearLocalRegistrations(currentIds);
     setParticipants([]);
     try {
       await fetch('/api/events/clear', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ timestamp: nowIso }),
+        body: JSON.stringify({ clearedIds: currentIds }),
       });
     } catch (e) {
       console.error('Failed to reset on server:', e);
