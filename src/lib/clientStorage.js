@@ -2,6 +2,27 @@
 // Ensures registrations and check-ins persist across Vercel serverless cold starts and browser reloads
 
 const STORAGE_KEY = 'eventpilot_registrations_v1';
+const CLEARED_AT_KEY = 'eventpilot_cleared_at';
+
+export function getLocalResetTimestamp() {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(CLEARED_AT_KEY);
+    if (!raw) return null;
+    const ms = new Date(raw).getTime();
+    return isNaN(ms) ? null : ms;
+  } catch (e) {
+    return null;
+  }
+}
+
+export function setLocalResetTimestamp(ts) {
+  if (typeof window === 'undefined') return;
+  try {
+    const iso = ts ? new Date(ts).toISOString() : new Date().toISOString();
+    localStorage.setItem(CLEARED_AT_KEY, iso);
+  } catch (e) {}
+}
 
 export function getLocalRegistrations() {
   if (typeof window === 'undefined') return [];
@@ -9,7 +30,17 @@ export function getLocalRegistrations() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    if (!Array.isArray(parsed)) return [];
+
+    const clearedAt = getLocalResetTimestamp();
+    if (clearedAt) {
+      return parsed.filter((r) => {
+        if (!r.registrationTime) return false;
+        const t = new Date(r.registrationTime).getTime();
+        return !isNaN(t) && t > clearedAt;
+      });
+    }
+    return parsed;
   } catch (e) {
     console.error('Failed to read local registrations:', e);
     return [];
@@ -80,10 +111,19 @@ export function updateLocalAttendance(participantId, status = 'Present') {
 
 export function mergeRegistrations(serverRegs = []) {
   const localRegs = getLocalRegistrations();
+  const clearedAt = getLocalResetTimestamp();
+
+  const filteredServerRegs = (serverRegs || []).filter((r) => {
+    if (!clearedAt) return true;
+    if (!r.registrationTime) return false;
+    const t = new Date(r.registrationTime).getTime();
+    return !isNaN(t) && t > clearedAt;
+  });
+
   const map = new Map();
 
   // Add server items first
-  for (const r of serverRegs) {
+  for (const r of filteredServerRegs) {
     if (r.participantId) {
       map.set(r.participantId.toUpperCase(), r);
     } else if (r.email && r.eventId) {
@@ -115,10 +155,11 @@ export function mergeRegistrations(serverRegs = []) {
 export function clearLocalRegistrations() {
   if (typeof window === 'undefined') return;
   try {
+    const nowIso = new Date().toISOString();
+    localStorage.setItem(CLEARED_AT_KEY, nowIso);
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem('eventpilot_registrations');
   } catch (e) {
     console.error('Failed to clear local registrations:', e);
   }
 }
-

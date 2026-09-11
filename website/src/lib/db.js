@@ -62,6 +62,16 @@ let eventsStore = [
 let usersStore = [];
 
 let registrationsStore = [];
+let lastResetTimestamp = null;
+
+export function getResetTimestamp() {
+  return lastResetTimestamp;
+}
+
+export function setResetTimestamp(ts) {
+  lastResetTimestamp = ts ? new Date(ts).getTime() : Date.now();
+  return lastResetTimestamp;
+}
 
 export function getEvents() {
   return eventsStore;
@@ -81,7 +91,14 @@ export function getUsers() {
 }
 
 export function getUserByEmail(email) {
-  return usersStore.find(u => u.email.toLowerCase() === email.toLowerCase());
+  if (!email) return null;
+  return usersStore.find(u => u.email?.toLowerCase() === email.toLowerCase());
+}
+
+export function getUserByUsernameOrEmail(identifier) {
+  if (!identifier) return null;
+  const clean = identifier.trim().toLowerCase();
+  return usersStore.find(u => u.email?.toLowerCase() === clean || u.username?.toLowerCase() === clean);
 }
 
 export function addUser(user) {
@@ -90,15 +107,21 @@ export function addUser(user) {
 }
 
 export function getRegistrations() {
+  if (lastResetTimestamp) {
+    return registrationsStore.filter(r => {
+      if (!r.registrationTime) return false;
+      return new Date(r.registrationTime).getTime() > lastResetTimestamp;
+    });
+  }
   return registrationsStore;
 }
 
 export function getRegistrationsByEmail(email) {
-  return registrationsStore.filter(r => r.email.toLowerCase() === email.toLowerCase());
+  return getRegistrations().filter(r => r.email.toLowerCase() === email.toLowerCase());
 }
 
 export function getParticipantById(participantId) {
-  return registrationsStore.find(r => r.participantId === participantId);
+  return getRegistrations().find(r => r.participantId === participantId);
 }
 
 export function addRegistration(reg) {
@@ -130,8 +153,8 @@ export function updateParticipantCertificate(participantId, status = 'yes') {
   return null;
 }
 
-export function clearRegistrations() {
+export function clearRegistrations(timestamp = null) {
   registrationsStore = [];
+  lastResetTimestamp = timestamp ? new Date(timestamp).getTime() : Date.now();
   return true;
 }
-

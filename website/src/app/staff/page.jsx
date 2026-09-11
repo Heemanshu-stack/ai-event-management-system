@@ -57,12 +57,20 @@ export default function StaffPortalPage() {
   };
 
   const handleClearRoster = async () => {
-    if (!confirm('Are you sure you want to clear all registrations?')) return;
+    if (!confirm('Are you sure you want to clear all registrations across the platform?')) return;
+    const nowIso = new Date().toISOString();
     clearLocalRegistrations();
+    setParticipants([]);
     try {
-      await fetch('/api/events/clear', { method: 'POST' });
-    } catch (e) {}
-    fetchRoster();
+      await fetch('/api/events/clear', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ timestamp: nowIso }),
+      });
+    } catch (e) {
+      console.error('Failed to reset on server:', e);
+    }
+    await fetchRoster();
     alert('Roster registrations cleared successfully.');
   };
 

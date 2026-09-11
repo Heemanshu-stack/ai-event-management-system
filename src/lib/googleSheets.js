@@ -41,7 +41,7 @@ function parseFullCSV(text) {
   return rows;
 }
 
-export async function fetchLiveSheetRegistrations() {
+export async function fetchLiveSheetRegistrations(resetCutoffTimestamp = null) {
   try {
     const res = await fetch(CSV_URL, {
       next: { revalidate: 0 },
@@ -88,6 +88,15 @@ export async function fetchLiveSheetRegistrations() {
 
       if (!participantId) continue;
 
+      const regTimeRaw = timeIdx >= 0 && cols[timeIdx] ? cols[timeIdx].trim() : '';
+      if (resetCutoffTimestamp) {
+        if (!regTimeRaw) continue;
+        const regTimeMs = new Date(regTimeRaw).getTime();
+        if (isNaN(regTimeMs) || regTimeMs <= resetCutoffTimestamp) {
+          continue;
+        }
+      }
+
       const rawAtt = attIdx >= 0 && cols[attIdx] ? cols[attIdx].trim() : 'Pending';
       const attendance = /present/i.test(rawAtt) ? 'Present' : 'Pending';
 
@@ -98,7 +107,7 @@ export async function fetchLiveSheetRegistrations() {
         phone: phoneIdx >= 0 && cols[phoneIdx] ? cols[phoneIdx].trim() : '',
         college: collegeIdx >= 0 && cols[collegeIdx] ? cols[collegeIdx].trim() : '',
         eventName: eventIdx >= 0 && cols[eventIdx] ? cols[eventIdx].trim() : 'AI Innovation Hackathon',
-        registrationTime: timeIdx >= 0 && cols[timeIdx] ? cols[timeIdx].trim() : '',
+        registrationTime: regTimeRaw,
         qrCodeLink: qrIdx >= 0 && cols[qrIdx] ? cols[qrIdx].trim() : '',
         attendance,
         certificateSent: certIdx >= 0 && cols[certIdx] && /yes/i.test(cols[certIdx]) ? 'yes' : 'No',

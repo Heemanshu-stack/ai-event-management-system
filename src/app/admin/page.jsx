@@ -77,13 +77,21 @@ export default function AdminPage() {
   };
 
   const handleClearAllRegistrations = async () => {
-    if (!confirm('Are you sure you want to clear all registrations?')) return;
+    if (!confirm('Are you sure you want to reset all registrations across the platform?')) return;
+    const nowIso = new Date().toISOString();
     clearLocalRegistrations();
+    setParticipants([]);
     try {
-      await fetch('/api/events/clear', { method: 'POST' });
-    } catch (e) {}
-    fetchAdminData();
-    alert('All registered student data cleared successfully.');
+      await fetch('/api/events/clear', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ timestamp: nowIso }),
+      });
+    } catch (e) {
+      console.error('Failed to reset on server:', e);
+    }
+    await fetchAdminData();
+    alert('All registered student data and roster have been reset successfully.');
   };
 
   const handleCreateEvent = async (e) => {
